@@ -1,0 +1,41 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+    environment:
+      - DB_STRING=${DB_STRING}
+      - ALEMBIC_DB_URL=${ALEMBIC_DB_URL}
+      - DEBUG=${DEBUG}
+      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
+      - APP_EMAIL_ADDRESS=${APP_EMAIL_ADDRESS}
+      - EMAIL_TEMPLATES_PATH=${EMAIL_TEMPLATES_PATH}
+  db:
+    ports:
+      - "5432:5432"
+    image: postgres:17
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DB=${PG_DATABASE}
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbadmin -d yourdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
