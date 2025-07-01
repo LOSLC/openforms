@@ -608,57 +608,56 @@ export default function EditFormPage() {
                       </p>
                     </div>
 
-                    {(fieldForm.field_type === 'Select' || fieldForm.field_type === 'Multiselect') && (
-                      <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">Options</Label>
-                          <span className="text-xs text-gray-500">
-                            {fieldForm.options?.length || 0} option{(fieldForm.options?.length !== 1) ? 's' : ''}
-                          </span>
-                        </div>
-                        <div className="space-y-3">
-                          {fieldForm.options?.map((option, index) => (
-                            <div key={index} className="flex items-center gap-2 group">
-                              <div className="bg-white rounded-md border border-gray-200 h-8 w-8 flex items-center justify-center shrink-0">
-                                <span className="text-sm font-medium text-gray-700">{index + 1}</span>
+                    {(fieldForm.field_type === 'Select' || fieldForm.field_type === 'Multiselect') && (                        <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium">Options</Label>
+                            <span className="text-xs text-gray-500">
+                              {fieldForm.options?.length || 0} option{(fieldForm.options?.length !== 1) ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="space-y-3">
+                            {fieldForm.options?.map((option, index) => (
+                              <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 group">
+                                <div className="bg-white rounded-md border border-gray-200 h-8 w-8 flex items-center justify-center shrink-0">
+                                  <span className="text-sm font-medium text-gray-700">{index + 1}</span>
+                                </div>
+                                <Input
+                                  value={option}
+                                  onChange={(e) => updateOption(index, e.target.value)}
+                                  placeholder={`Option ${index + 1}`}
+                                  className="flex-1 h-11"
+                                  aria-label={`Option ${index + 1}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeOption(index)}
+                                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 opacity-80 group-hover:opacity-100 w-full sm:w-auto"
+                                  aria-label={`Remove option ${index + 1}`}
+                                >
+                                  Remove
+                                </Button>
                               </div>
-                              <Input
-                                value={option}
-                                onChange={(e) => updateOption(index, e.target.value)}
-                                placeholder={`Option ${index + 1}`}
-                                className="flex-1 h-11"
-                                aria-label={`Option ${index + 1}`}
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeOption(index)}
-                                className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 opacity-80 group-hover:opacity-100"
-                                aria-label={`Remove option ${index + 1}`}
-                              >
-                                Remove
-                              </Button>
-                            </div>
-                          ))}
-                          
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addOption}
-                            className="w-full h-10 bg-white"
-                          >
-                            + Add Option
-                          </Button>
-                          
-                          {(!fieldForm.options || fieldForm.options.length === 0) && (
-                            <div className="bg-blue-50 text-blue-700 p-3 rounded-md text-sm">
-                              Click &quot;Add Option&quot; to create choices for this field.
-                            </div>
-                          )}
+                            ))}
+                            
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={addOption}
+                              className="w-full h-10 bg-white"
+                            >
+                              + Add Option
+                            </Button>
+                            
+                            {(!fieldForm.options || fieldForm.options.length === 0) && (
+                              <div className="bg-blue-50 text-blue-700 p-3 rounded-md text-sm">
+                                Click &quot;Add Option&quot; to create choices for this field.
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
                     )}
 
                     {fieldForm.field_type === 'Text' && (
@@ -812,22 +811,23 @@ export default function EditFormPage() {
                     <CardContent className="p-5">
                       {editingField === field.id ? (
                         <form onSubmit={(e) => { e.preventDefault(); handleUpdateField(field.id); }} className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <Label>Field Label</Label>
+                              <Label className="text-sm font-medium">Field Label</Label>
                               <Input
                                 value={fieldForm.label}
                                 onChange={(e) => setFieldForm(prev => ({ ...prev, label: e.target.value }))}
                                 required
+                                className="mt-1"
                               />
                             </div>
                             <div>
-                              <Label>Field Type</Label>
+                              <Label className="text-sm font-medium">Field Type</Label>
                               <Select
                                 value={fieldForm.field_type}
                                 onValueChange={handleFieldTypeChange}
                               >
-                                <SelectTrigger>
+                                <SelectTrigger className="mt-1">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -842,19 +842,20 @@ export default function EditFormPage() {
                           </div>
                           
                           <div>
-                            <Label>Description</Label>
+                            <Label className="text-sm font-medium">Description</Label>
                             <Input
                               value={fieldForm.description}
                               onChange={(e) => setFieldForm(prev => ({ ...prev, description: e.target.value }))}
+                              className="mt-1"
                             />
                           </div>
 
                           {(fieldForm.field_type === 'Select' || fieldForm.field_type === 'Multiselect') && (
                             <div>
-                              <Label>Options</Label>
-                              <div className="space-y-2">
+                              <Label className="text-sm font-medium">Options</Label>
+                              <div className="space-y-2 mt-1">
                                 {fieldForm.options?.map((option, index) => (
-                                  <div key={index} className="flex items-center space-x-2">
+                                  <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                                     <Input
                                       value={option}
                                       onChange={(e) => updateOption(index, e.target.value)}
@@ -866,7 +867,7 @@ export default function EditFormPage() {
                                       variant="outline"
                                       size="sm"
                                       onClick={() => removeOption(index)}
-                                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 w-full sm:w-auto"
                                     >
                                       Remove
                                     </Button>
@@ -882,7 +883,7 @@ export default function EditFormPage() {
                                   + Add Option
                                 </Button>
                                 {(!fieldForm.options || fieldForm.options.length === 0) && (
-                                  <p className="text-sm text-gray-500">Click &quot;Add Option&quot; to create choices for this field.</p>
+                                  <p className="text-xs sm:text-sm text-gray-500">Click &quot;Add Option&quot; to create choices for this field.</p>
                                 )}
                               </div>
                             </div>
@@ -890,8 +891,8 @@ export default function EditFormPage() {
 
                           {fieldForm.field_type === 'Text' && (
                             <div>
-                              <Label>Text Length Limits</Label>
-                              <div className="grid grid-cols-2 gap-4">
+                              <Label className="text-sm font-medium">Text Length Limits</Label>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
                                 <div>
                                   <Input
                                     type="number"
@@ -926,8 +927,8 @@ export default function EditFormPage() {
 
                           {fieldForm.field_type === 'Numerical' && (
                             <div>
-                              <Label>Number Range Limits</Label>
-                              <div className="grid grid-cols-2 gap-4">
+                              <Label className="text-sm font-medium">Number Range Limits</Label>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
                                 <div>
                                   <Input
                                     type="number"
@@ -965,24 +966,24 @@ export default function EditFormPage() {
                               checked={fieldForm.required}
                               onCheckedChange={(checked) => setFieldForm(prev => ({ ...prev, required: checked as boolean }))}
                             />
-                            <Label>Required field</Label>
+                            <Label className="text-sm">Required field</Label>
                           </div>
 
-                          <div className="flex space-x-2">
-                            <Button type="submit" disabled={updateFieldMutation.isPending}>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Button type="submit" disabled={updateFieldMutation.isPending} className="w-full sm:w-auto">
                               {updateFieldMutation.isPending ? 'Updating...' : 'Update Field'}
                             </Button>
-                            <Button type="button" variant="outline" onClick={cancelEdit}>
+                            <Button type="button" variant="outline" onClick={cancelEdit} className="w-full sm:w-auto">
                               Cancel
                             </Button>
                           </div>
                         </form>
                       ) : (
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                          <div className="flex-1">
+                        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+                          <div className="flex-1 min-w-0">
                             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                              <h4 className="font-semibold text-lg text-gray-800">{field.label}</h4>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${field.field_type === 'Text' ? 'bg-blue-100 text-blue-800' : 
+                              <h4 className="font-semibold text-base sm:text-lg text-gray-800 truncate">{field.label}</h4>
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${field.field_type === 'Text' ? 'bg-blue-100 text-blue-800' : 
                                 field.field_type === 'Numerical' ? 'bg-green-100 text-green-800' :
                                 field.field_type === 'Boolean' ? 'bg-purple-100 text-purple-800' :
                                 field.field_type === 'Select' ? 'bg-amber-100 text-amber-800' :
@@ -990,7 +991,7 @@ export default function EditFormPage() {
                               >
                                 {field.field_type}
                               </span>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
                                 field.required ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'}`}
                               >
                                 {field.required ? 'Required' : 'Optional'}
@@ -1001,9 +1002,9 @@ export default function EditFormPage() {
                               <p className="text-sm text-gray-600 mb-3">{field.description}</p>
                             )}
                             
-                            <div className="flex flex-wrap gap-3 text-xs">
+                            <div className="flex flex-col gap-2 text-xs">
                               {field.possible_answers && (
-                                <div className="px-3 py-1.5 bg-gray-100 rounded-md">
+                                <div className="px-3 py-1.5 bg-gray-100 rounded-md break-words">
                                   <span className="font-medium text-gray-700">Options:</span>{' '}
                                   <span className="text-gray-600">{field.possible_answers}</span>
                                 </div>
@@ -1022,13 +1023,13 @@ export default function EditFormPage() {
                               )}
                             </div>
                           </div>
-                          <div className="flex gap-2 self-end md:self-auto">
+                          <div className="flex flex-row lg:flex-col gap-2 lg:self-start flex-shrink-0">
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => startEditField(field)}
                               disabled={showNewField || editingField !== null}
-                              className="h-9 px-3"
+                              className="h-9 px-3 flex-1 lg:flex-none lg:w-20"
                               aria-label={`Edit ${field.label} field`}
                             >
                               Edit
@@ -1038,7 +1039,7 @@ export default function EditFormPage() {
                               size="sm"
                               onClick={() => handleDeleteField(field.id)}
                               disabled={deleteFieldMutation.isPending}
-                              className="h-9 px-3 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                              className="h-9 px-3 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800 flex-1 lg:flex-none lg:w-20"
                               aria-label={`Delete ${field.label} field`}
                             >
                               Delete

@@ -128,25 +128,25 @@ export default function FormResponsesPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center py-4 lg:h-16 gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
               <Link href={`/admin/forms/${formId}`}>
-                <Button variant="ghost">
+                <Button variant="ghost" size="sm" className="font-medium">
                   ← Back to Form
                 </Button>
               </Link>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">
+                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
                   Form Responses
                 </h1>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 truncate max-w-xs sm:max-w-none">
                   {form.label}
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2 w-full lg:w-auto">
               {responses && responses.length > 0 && (
-                <Button variant="outline" size="sm" onClick={exportToCSV}>
+                <Button variant="outline" size="sm" onClick={exportToCSV} className="w-full sm:w-auto">
                   <Download className="h-4 w-4 mr-2" />
                   Export CSV
                 </Button>
@@ -164,40 +164,47 @@ export default function FormResponsesPage() {
         {/* Search and Filters */}
         <Card>
           <CardHeader>
-            <CardTitle>Search Responses</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Search Responses</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Search through form responses by answer content or field name
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <Label htmlFor="search">Search</Label>
+            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4">
+              <div className="flex-1 w-full">
+                <Label htmlFor="search" className="text-sm font-medium">Search</Label>
                 <Input
                   id="search"
                   placeholder="Search responses..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="mt-1"
                 />
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setSkip(Math.max(0, skip - limit))}
-                  disabled={skip === 0}
-                >
-                  ← Previous
-                </Button>
-                <span className="text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full lg:w-auto">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSkip(Math.max(0, skip - limit))}
+                    disabled={skip === 0}
+                    className="flex-1 sm:flex-none"
+                  >
+                    ← Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSkip(skip + limit)}
+                    disabled={!responses || responses.length < limit}
+                    className="flex-1 sm:flex-none"
+                  >
+                    Next →
+                  </Button>
+                </div>
+                <span className="text-sm text-gray-600 whitespace-nowrap">
                   {skip + 1} - {Math.min(skip + limit, (responses?.length || 0) + skip)}
                 </span>
-                <Button
-                  variant="outline"
-                  onClick={() => setSkip(skip + limit)}
-                  disabled={!responses || responses.length < limit}
-                >
-                  Next →
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -227,12 +234,12 @@ export default function FormResponsesPage() {
             {filteredResponses.map((session) => (
               <Card key={session.id}>
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base sm:text-lg truncate">
                         Response #{session.id.slice(-8)}
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-sm">
                         Status: {session.submitted ? (
                           <span className="text-green-600 font-medium">✓ Submitted</span>
                         ) : (
@@ -245,21 +252,21 @@ export default function FormResponsesPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {session.answers.map((answer) => (
-                      <div key={answer.id} className="border-l-4 border-blue-200 pl-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">
+                      <div key={answer.id} className="border-l-4 border-blue-200 pl-3 sm:pl-4">
+                        <div className="flex flex-col lg:flex-row justify-between items-start gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm sm:text-base">
                               {answer.field.label}
                               {answer.field.required && (
                                 <span className="text-red-500 ml-1">*</span>
                               )}
                             </h4>
                             {answer.field.description && (
-                              <p className="text-sm text-gray-600 mb-2">
+                              <p className="text-xs sm:text-sm text-gray-600 mb-2">
                                 {answer.field.description}
                               </p>
                             )}
-                            <p className="text-gray-800">
+                            <p className="text-gray-800 text-sm sm:text-base break-words">
                               {formatAnswerValue(
                                 answer.value, 
                                 answer.field.field_type, 
@@ -267,7 +274,7 @@ export default function FormResponsesPage() {
                               )}
                             </p>
                           </div>
-                          <div className="text-xs text-gray-500 ml-4">
+                          <div className="text-xs text-gray-500 flex-shrink-0 self-start lg:ml-4">
                             {answer.field.field_type}
                           </div>
                         </div>
@@ -275,7 +282,7 @@ export default function FormResponsesPage() {
                     ))}
                     
                     {session.answers.length === 0 && (
-                      <p className="text-gray-500 italic">No answers provided yet.</p>
+                      <p className="text-gray-500 italic text-sm">No answers provided yet.</p>
                     )}
                   </div>
                 </CardContent>
@@ -298,14 +305,14 @@ export default function FormResponsesPage() {
                 }
               </p>
               {!searchTerm && (
-                <div className="space-x-2">
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
                   <Link href={`/${formId}`}>
-                    <Button variant="outline">
+                    <Button variant="outline" className="w-full sm:w-auto">
                       Preview Form
                     </Button>
                   </Link>
                   <Link href={`/admin/forms/${formId}`}>
-                    <Button>
+                    <Button className="w-full sm:w-auto">
                       Edit Form
                     </Button>
                   </Link>
