@@ -34,6 +34,7 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://loslc.tech",
+        "https://forms.loslc.tech",
     ],  # Or ["http://localhost:3000"] for stricter control
     allow_credentials=True,
     allow_methods=["*"],
