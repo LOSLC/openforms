@@ -39,7 +39,7 @@ CurrentAnswerSessionDependency = Annotated[
 
 
 # Form CRUD Operations (Admin/Owner Access)
-@router.post("/", response_model=FormDTO, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=FormDTO, status_code=status.HTTP_201_CREATED)
 async def create_form(
     form_data: FormCreationDTO,
     db_session: DBSessionDependency,
