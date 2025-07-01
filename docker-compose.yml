@@ -2,12 +2,14 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT}:3000"
+    depends_on:
+      - backend
 
   backend:
     build: ./backend
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT}:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -20,8 +22,6 @@ services:
       - APP_EMAIL_ADDRESS=${APP_EMAIL_ADDRESS}
       - EMAIL_TEMPLATES_PATH=${EMAIL_TEMPLATES_PATH}
   db:
-    ports:
-      - "5432:5432"
     image: postgres:17
     environment:
       - POSTGRES_USER=${PG_USER}
