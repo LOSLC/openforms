@@ -1,36 +1,149 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LOSLC Forms Frontend
 
-## Getting Started
+A modern React/Next.js frontend for the LOSLC Forms dynamic form builder system.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The frontend is organized into three main parts:
+
+### 🔐 Auth (`/auth`)
+- User authentication (login/register)
+- Built with React Hook Form + Zod validation
+- Cookie-based session management
+
+### 👑 Admin (`/admin`)
+- Form creation and management
+- Response analytics
+- User dashboard
+- Protected routes with authentication
+
+### 📝 Main (`/[formId]`)
+- Public form filling interface
+- Dynamic field rendering
+- Anonymous session management
+- Real-time response submission
+
+## Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **UI Components**: Shadcn/ui + Tailwind CSS
+- **State Management**: TanStack React Query
+- **HTTP Client**: Ky
+- **Forms**: React Hook Form + Zod
+- **Package Manager**: Bun
+
+## API Integration
+
+- **Base URL**: `http://localhost:8000` (configurable via `NEXT_PUBLIC_API_URL`)
+- **Authentication**: Cookie-based sessions
+- **Data Fetching**: React Query with Ky under the hood
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── auth/              # Authentication pages
+│   ├── admin/             # Admin panel
+│   ├── [formId]/          # Public form pages
+│   └── layout.tsx         # Root layout with providers
+├── components/
+│   ├── ui/                # Shadcn/ui components
+│   └── providers/         # React Query provider
+└── lib/
+    ├── api.ts             # API types and client
+    ├── services/          # API service functions
+    │   ├── auth.ts        # Authentication services
+    │   ├── admin.ts       # Admin panel services
+    │   └── forms.ts       # Public form services
+    ├── hooks/             # React Query hooks
+    │   ├── useAuth.ts     # Auth hooks
+    │   ├── useAdmin.ts    # Admin hooks
+    │   └── useForms.ts    # Form hooks
+    └── utils.ts           # Utility functions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Authentication
+- Login/Register forms with validation
+- Automatic redirect on authentication state change
+- Session persistence with cookies
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Admin Panel
+- Dashboard with form overview
+- Form creation with drag-and-drop builder
+- Real-time response monitoring
+- Form management (create, edit, delete, open/close)
 
-## Learn More
+### Form Filling
+- Dynamic field rendering based on backend configuration
+- Support for multiple field types:
+  - Text input
+  - Numerical input with bounds
+  - Boolean (checkbox)
+  - Single select (dropdown)
+  - Multi-select (checkboxes)
+- Real-time response submission
+- Session management for anonymous users
+- Form validation
 
-To learn more about Next.js, take a look at the following resources:
+### UI/UX
+- Responsive design
+- Modern, clean interface
+- Loading states and error handling
+- Toast notifications
+- Accessibility support
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Install dependencies
+bun install
 
-## Deploy on Vercel
+# Start development server
+bun run dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Build for production
+bun run build
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Start production server
+bun run start
+```
+
+## Environment Variables
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## API Endpoints Used
+
+### Authentication
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/register`
+- `POST /api/v1/auth/logout`
+- `GET /api/v1/auth/me`
+
+### Admin (Authenticated)
+- `GET /api/v1/forms` - Get all forms
+- `GET /api/v1/forms/my` - Get user forms
+- `POST /api/v1/forms` - Create form
+- `PUT /api/v1/forms/{id}` - Update form
+- `DELETE /api/v1/forms/{id}` - Delete form
+- `POST /api/v1/forms/{id}/close` - Close form
+- `POST /api/v1/forms/{id}/open` - Open form
+
+### Forms (Public)
+- `GET /api/v1/forms/{id}` - Get form details
+- `GET /api/v1/forms/{id}/fields` - Get form fields
+- `POST /api/v1/forms/responses` - Submit response
+- `PUT /api/v1/forms/responses/{id}` - Edit response
+- `POST /api/v1/forms/sessions/{id}/submit` - Submit session
+
+## Security
+
+- All admin routes require authentication
+- CSRF protection via cookies
+- Input validation on client and server
+- Secure session management

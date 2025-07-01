@@ -3,8 +3,7 @@ from typing import Any
 
 from fastapi import HTTPException
 from pydantic import BaseModel
-from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
+from sqlmodel import Session, select
 from starlette.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
@@ -14,8 +13,13 @@ from starlette.status import (
 from app.core.db.models import Permission, Role
 from app.core.security.checkers import check_existence
 
-EXEMPLE_RESOURCE = "resource"
+SUPER_ADMIN_ROLE_NAME = "superadmin"
+ADMIN_ROLE_NAME = "admin"
+
 USER_RESOURCE = "user"
+FORM_RESOURCE = "form"
+FORM_FIELD_RESPONSE_RESOURCE = "fieldresponse"
+FORM_FIELD_RESOURCE = "formfield"
 
 ACTION_CREATE = "c"
 ACTION_READ = "r"
@@ -24,20 +28,20 @@ ACTION_UPDATE = "w"
 ACTION_DELETE = "d"
 
 
-async def create_global_permission(
+def create_global_permission(
     role_id: str,
-    db_session: AsyncSession,
+    db_session: Session,
     resource_name: str,
     action_name: str,
     commit: bool = True,
 ):
-    role = await db_session.get(Role, role_id)
+    role = db_session.get(Role, role_id)
     if not role:
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND, detail="Role not found."
         )
     permission_in_db = (
-        await db_session.exec(
+        db_session.exec(
             select(Permission).where(
                 Permission.role_id == role_id,
                 Permission.name == f"{resource_name}:{action_name}",
@@ -55,16 +59,16 @@ async def create_global_permission(
     )
     if commit:
         db_session.add(permission)
-        await db_session.commit()
-        await db_session.refresh(permission)
+        db_session.commit()
+        db_session.refresh(permission)
     else:
         db_session.add(permission)
         return permission
 
 
-async def create_permission(
+def create_permission(
     _role: Role | None,
-    db_session: AsyncSession,
+    db_session: Session,
     resource_name: str,
     resource_id: Any,
     action_name: str,
@@ -76,7 +80,7 @@ async def create_permission(
         detail="Not authorized to access this resource.",
     )
     permission_in_db = (
-        await db_session.exec(
+        db_session.exec(
             select(Permission).where(
                 Permission.role_id == role.id,
                 Permission.name
@@ -95,37 +99,38 @@ async def create_permission(
     )
     if commit:
         db_session.add(permission)
-        await db_session.commit()
-        await db_session.refresh(permission)
+        db_session.commit()
+        db_session.refresh(permission)
     return permission
 
 
-async def has_permission(
-    db_session: AsyncSession,
+def has_permission(
+    db_session: Session,
     role: Role,
     resource_name: str,
     resource_id: str,
     action_name: str,
 ) -> bool:
     permission = (
-        await db_session.exec(
+        db_session.exec(
             select(Permission).where(
                 Permission.role_id == role.id,
-                Permission.name == f"{resource_name}:{resource_id}:{action_name}",
+                Permission.name
+                == f"{resource_name}:{resource_id}:{action_name}",
             )
         )
     ).first()
     return permission is not None
 
 
-async def has_global_permission(
-    db_session: AsyncSession,
+def has_global_permission(
+    db_session: Session,
     role: Role,
     resource_name: str,
     action_name: str,
 ) -> bool:
     permission = (
-        await db_session.exec(
+        db_session.exec(
             select(Permission).where(
                 Permission.role_id == role.id,
                 Permission.name == f"{resource_name}:{action_name}",
@@ -148,19 +153,20 @@ class GlobalPermissionCheckModel(BaseModel):
 
 class PermissionChecker(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
-    db_session: AsyncSession
+    db_session: Session
     roles: list[Role]
     bypass_role: str | None = None
+    bypass_roles: list[str | None] = []
     pcheck_models: Sequence[PermissionCheckModel | GlobalPermissionCheckModel]
 
-    async def _is_allowed(
+    def _is_allowed(
         self,
         role: Role,
         pcheck: PermissionCheckModel | GlobalPermissionCheckModel,
         action_name: str,
     ) -> bool:
         if isinstance(pcheck, PermissionCheckModel):
-            return await has_permission(
+            return has_permission(
                 db_session=self.db_session,
                 role=role,
                 resource_name=pcheck.resource_name,
@@ -168,31 +174,38 @@ class PermissionChecker(BaseModel):
                 action_name=action_name,
             )
         elif isinstance(pcheck, GlobalPermissionCheckModel):
-            return await has_global_permission(
+            return has_global_permission(
                 db_session=self.db_session,
                 role=role,
                 resource_name=pcheck.resource_name,
                 action_name=action_name,
             )
 
-    async def check(self, either: bool = False) -> bool:
-        if self.bypass_role in [role.name for role in self.roles]:
+    def check(
+        self, either: bool = False, message: str | None = None
+    ) -> bool:
+        if self.bypass_role in [role.name for role in self.roles] or [
+            bypass_role in [role.name for role in self.roles]
+            for bypass_role in self.bypass_roles
+        ]:
             return True
         if either:
             # Check if any permission is satisfied
             for role in self.roles:
                 for pcheck in self.pcheck_models:
                     for action_name in pcheck.action_names:
-                        if await self._is_allowed(role, pcheck, action_name):
+                        if self._is_allowed(role, pcheck, action_name):
                             return True
-            raise HTTPException(401, "Not authorized to access this resource")
+            raise HTTPException(
+                401, message or "Not authorized to access this resource"
+            )
 
         # Check if all permissions are satisfied for at least one role
         for role in self.roles:
             all_permissions_satisfied = True
             for pcheck in self.pcheck_models:
                 for action_name in pcheck.action_names:
-                    if not await self._is_allowed(role, pcheck, action_name):
+                    if not self._is_allowed(role, pcheck, action_name):
                         all_permissions_satisfied = False
                         break
                 if not all_permissions_satisfied:
@@ -200,4 +213,6 @@ class PermissionChecker(BaseModel):
             if all_permissions_satisfied:
                 return True
 
-        raise HTTPException(401, "Not authorized to access resource")
+        raise HTTPException(
+            401, message or "Not authorized to access resource"
+        )

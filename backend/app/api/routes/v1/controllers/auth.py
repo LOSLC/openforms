@@ -1,14 +1,14 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel import Session
 
 from app.api.routes.v1.dto.auth import (
     LoginRequestDTO,
     RegisterRequestDTO,
     UserResponseDTO,
 )
-from app.api.routes.v1.dto.message import MessageDTO
+from app.api.routes.v1.dto.message import MessageResponse
 from app.api.routes.v1.providers.auth import (
     get_current_user,
     login,
@@ -20,10 +20,10 @@ from app.core.db.setup import create_db_session
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/register", response_model=MessageDTO)
+@router.post("/register", response_model=MessageResponse)
 async def register_user(
     request: RegisterRequestDTO,
-    db_session: Annotated[AsyncSession, Depends(create_db_session)],
+    db_session: Annotated[Session, Depends(create_db_session)],
 ):
     """Register a new user account."""
     return await register(
@@ -36,11 +36,11 @@ async def register_user(
     )
 
 
-@router.post("/login", response_model=MessageDTO)
+@router.post("/login", response_model=MessageResponse)
 async def login_user(
     request: LoginRequestDTO,
     response: Response,
-    db_session: Annotated[AsyncSession, Depends(create_db_session)],
+    db_session: Annotated[Session, Depends(create_db_session)],
 ):
     """Login user and create session."""
     return await login(
@@ -59,10 +59,10 @@ async def get_me(
     return current_user
 
 
-@router.post("/logout", response_model=MessageDTO)
+@router.post("/logout", response_model=MessageResponse)
 async def logout_user(
     response: Response,
 ):
     """Logout user by clearing session cookie."""
     response.delete_cookie(key="user_session_id", httponly=True)
-    return MessageDTO(message="Logged out successfully.")
+    return MessageResponse(message="Logged out successfully.")

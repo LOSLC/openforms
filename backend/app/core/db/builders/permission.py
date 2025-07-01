@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from app.core.db.models import Permission, Role
 
@@ -19,8 +19,8 @@ class PermissionBuilder:
         self.action_name = action
         return self
 
-    def withResourceId(self, resource_id: str):
-        self.resource_id = resource_id
+    def withResourceId(self, resource_id: Any):
+        self.resource_id = str(resource_id)
         return self
 
     def forRole(self, role: Role):
