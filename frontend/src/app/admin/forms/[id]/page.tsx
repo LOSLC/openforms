@@ -102,11 +102,32 @@ export default function EditFormPage() {
     }));
   };
 
-  // Convert options array to comma-separated string for API
+  // Convert options array to comma-separated string for API and handle bounds
   const prepareFieldData = (data: FieldFormData) => {
-    const { options, ...rest } = data;
+    const { options, text_bounds, number_bounds, ...rest } = data;
+    
+    // Process text bounds - only include if both min and max are provided
+    let processedTextBounds: string | undefined = undefined;
+    if (text_bounds) {
+      const [min, max] = text_bounds.split(':');
+      if (min && max && min.trim() !== '' && max.trim() !== '') {
+        processedTextBounds = `${min}:${max}`;
+      }
+    }
+    
+    // Process number bounds - only include if both min and max are provided
+    let processedNumberBounds: string | undefined = undefined;
+    if (number_bounds) {
+      const [min, max] = number_bounds.split(':');
+      if (min && max && min.trim() !== '' && max.trim() !== '') {
+        processedNumberBounds = `${min}:${max}`;
+      }
+    }
+    
     return {
       ...rest,
+      text_bounds: processedTextBounds,
+      number_bounds: processedNumberBounds,
       possible_answers: options && options.length > 0 ? options.filter(opt => opt.trim()).join(', ') : undefined
     };
   };
@@ -171,6 +192,26 @@ export default function EditFormPage() {
       }
     }
     
+    // Validate text bounds - ensure both min and max are provided if either is provided
+    if (fieldForm.field_type === 'Text' && fieldForm.text_bounds) {
+      const [min, max] = fieldForm.text_bounds.split(':');
+      if ((min && min.trim() !== '' && (!max || max.trim() === '')) || 
+          (max && max.trim() !== '' && (!min || min.trim() === ''))) {
+        alert('Please provide both minimum and maximum values for text length or leave both empty.');
+        return;
+      }
+    }
+    
+    // Validate number bounds - ensure both min and max are provided if either is provided
+    if (fieldForm.field_type === 'Numerical' && fieldForm.number_bounds) {
+      const [min, max] = fieldForm.number_bounds.split(':');
+      if ((min && min.trim() !== '' && (!max || max.trim() === '')) || 
+          (max && max.trim() !== '' && (!min || min.trim() === ''))) {
+        alert('Please provide both minimum and maximum values for number range or leave both empty.');
+        return;
+      }
+    }
+    
     try {
       await createFieldMutation.mutateAsync({
         formId,
@@ -197,6 +238,26 @@ export default function EditFormPage() {
       const validOptions = fieldForm.options?.filter(opt => opt.trim()) || [];
       if (validOptions.length === 0) {
         alert('Please add at least one option for this field type.');
+        return;
+      }
+    }
+    
+    // Validate text bounds - ensure both min and max are provided if either is provided
+    if (fieldForm.field_type === 'Text' && fieldForm.text_bounds) {
+      const [min, max] = fieldForm.text_bounds.split(':');
+      if ((min && min.trim() !== '' && (!max || max.trim() === '')) || 
+          (max && max.trim() !== '' && (!min || min.trim() === ''))) {
+        alert('Please provide both minimum and maximum values for text length or leave both empty.');
+        return;
+      }
+    }
+    
+    // Validate number bounds - ensure both min and max are provided if either is provided
+    if (fieldForm.field_type === 'Numerical' && fieldForm.number_bounds) {
+      const [min, max] = fieldForm.number_bounds.split(':');
+      if ((min && min.trim() !== '' && (!max || max.trim() === '')) || 
+          (max && max.trim() !== '' && (!min || min.trim() === ''))) {
+        alert('Please provide both minimum and maximum values for number range or leave both empty.');
         return;
       }
     }
