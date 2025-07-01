@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 
-class MessageDTO(BaseModel):
+class MessageResponse(BaseModel):
     message: str
