@@ -41,17 +41,15 @@ export default function NewFormPage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/admin/forms">
-                <Button variant="ghost">
-                  ← Back to Forms
-                </Button>
-              </Link>
-              <h1 className="text-xl font-semibold text-gray-900">
-                Create New Form
-              </h1>
-            </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center py-4 sm:h-16 gap-3 sm:gap-4">
+            <Link href="/admin/forms">
+              <Button variant="ghost" size="sm" className="font-medium">
+                ← Back to Forms
+              </Button>
+            </Link>
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              Create New Form
+            </h1>
           </div>
         </div>
       </header>
@@ -60,15 +58,15 @@ export default function NewFormPage() {
       <main className="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <Card>
           <CardHeader>
-            <CardTitle>Form Details</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg sm:text-xl">Form Details</CardTitle>
+            <CardDescription className="text-sm sm:text-base">
               Create a new form by providing a title and description. You can add fields after creating the form.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="title">
+                <Label htmlFor="title" className="text-sm font-medium">
                   Form Title <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -78,14 +76,15 @@ export default function NewFormPage() {
                   placeholder="Enter form title..."
                   required
                   maxLength={100}
+                  className="mt-1"
                 />
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   {title.length}/100 characters
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="description">
+                <Label htmlFor="description" className="text-sm font-medium">
                   Description (Optional)
                 </Label>
                 <Textarea
@@ -95,21 +94,23 @@ export default function NewFormPage() {
                   placeholder="Describe what this form is for..."
                   rows={4}
                   maxLength={500}
+                  className="mt-1"
                 />
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                   {description.length}/500 characters
                 </p>
               </div>
 
-              <div className="flex justify-end space-x-4 pt-4">
-                <Link href="/admin/forms">
-                  <Button variant="outline" type="button">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4 pt-4">
+                <Link href="/admin/forms" className="w-full sm:w-auto">
+                  <Button variant="outline" type="button" className="w-full sm:w-auto">
                     Cancel
                   </Button>
                 </Link>
                 <Button 
                   type="submit" 
                   disabled={!title.trim() || createFormMutation.isPending}
+                  className="w-full sm:w-auto"
                 >
                   {createFormMutation.isPending ? 'Creating...' : 'Create Form'}
                 </Button>
@@ -123,17 +124,17 @@ export default function NewFormPage() {
           <Card className="mt-6">
             <CardHeader>
               <CardTitle className="text-lg">Preview</CardTitle>
-              <CardDescription>
+              <CardDescription className="text-sm sm:text-base">
                 This is how your form will appear to users
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-2">{title}</h2>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{title}</h2>
                 {description && (
-                  <p className="text-gray-600 mb-4">{description}</p>
+                  <p className="text-gray-600 mb-4 text-sm sm:text-base">{description}</p>
                 )}
-                <p className="text-sm text-gray-500 italic">
+                <p className="text-xs sm:text-sm text-gray-500 italic">
                   Form fields will appear here after you add them
                 </p>
               </div>
