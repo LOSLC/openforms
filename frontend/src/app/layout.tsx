@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LOSL-C Forms",
   description: "Dynamic form management system for LOSL-C",
+  icons: "/favicon.png",
 };
 
 export default function RootLayout({
