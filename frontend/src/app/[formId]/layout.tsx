@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 interface FormLayoutProps {
   children: React.ReactNode;
-  params: { formId: string };
+  params: Promise<{ formId: string }>;
 }
 
 export default function FormLayout({ children }: FormLayoutProps) {
