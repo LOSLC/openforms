@@ -101,16 +101,17 @@ async def login(
     )
     check_conditions([verify_password(password, user.hashed_password)])
 
-    PermissionChecker(
-        db_session=db_session,
-        roles=user.roles,
-        bypass_roles=[ADMIN_ROLE_NAME, SUPER_ADMIN_ROLE_NAME],
-        pcheck_models=[
-            GlobalPermissionCheckModel(
-                resource_name=USER_RESOURCE, action_names=[ACTION_CREATE]
-            )
-        ],
-    ).check(message="Email not authorized.")
+    if get_env("ALLOW_ADMINS_ONLY") == "True":
+        PermissionChecker(
+            db_session=db_session,
+            roles=user.roles,
+            bypass_roles=[ADMIN_ROLE_NAME, SUPER_ADMIN_ROLE_NAME],
+            pcheck_models=[
+                GlobalPermissionCheckModel(
+                    resource_name=USER_RESOURCE, action_names=[ACTION_CREATE]
+                )
+            ],
+        ).check(message="Email not authorized.")
 
     login_session = LoginSession(user_id=user.id)
     db_session.add(login_session)
