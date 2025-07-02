@@ -181,16 +181,23 @@ class PermissionChecker(BaseModel):
                 action_name=action_name,
             )
 
-    def check(
-        self, either: bool = False, message: str | None = None
-    ) -> bool:
-        if self.bypass_role in [role.name for role in self.roles] or [
-            bypass_role in [role.name for role in self.roles]
-            for bypass_role in self.bypass_roles
-        ]:
+    def check(self, either: bool = False, message: str | None = None) -> bool:
+        def has_role():
+            if self.bypass_role in [
+                role.name for role in self.roles if role.name is not None
+            ]:
+                return True
+            for role in [
+                role.name for role in self.roles if role.name is not None
+            ]:
+                if role in self.bypass_roles:
+                    return True
+            return False
+
+        if has_role():
             return True
+
         if either:
-            # Check if any permission is satisfied
             for role in self.roles:
                 for pcheck in self.pcheck_models:
                     for action_name in pcheck.action_names:
@@ -200,7 +207,6 @@ class PermissionChecker(BaseModel):
                 401, message or "Not authorized to access this resource"
             )
 
-        # Check if all permissions are satisfied for at least one role
         for role in self.roles:
             all_permissions_satisfied = True
             for pcheck in self.pcheck_models:
