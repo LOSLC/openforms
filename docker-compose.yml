@@ -4,12 +4,15 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_SHOW_LANDING_PAGE: ${NEXT_PUBLIC_SHOW_LANDING_PAGE}
     ports:
       - "${FRONTEND_PORT}:3000"
     depends_on:
       - backend
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_SHOW_LANDING_PAGE=${NEXT_PUBLIC_SHOW_LANDING_PAGE}
+
 
   backend:
     build: ./backend
@@ -26,6 +29,7 @@ services:
       - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
       - APP_EMAIL_ADDRESS=${APP_EMAIL_ADDRESS}
       - EMAIL_TEMPLATES_PATH=${EMAIL_TEMPLATES_PATH}
+      - ALLOW_ADMINS_ONLY=${ALLOW_ADMINS_ONLY}
   db:
     image: postgres:17
     environment:
