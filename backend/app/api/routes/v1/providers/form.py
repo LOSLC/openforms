@@ -330,17 +330,13 @@ async def submit(
 
     stmt = (
         select(FormField)
-        .outerjoin(
-            FieldAnswer,
-            (FormField.id == FieldAnswer.field_id)
-            & (FieldAnswer.session_id == answer_session.id),
-        )
+        .where(FormField.required == True)
+        .outerjoin(FieldAnswer)
         .where(
-            FormField.required == (True),
-            FieldAnswer.id == (None),
+            FieldAnswer.id == None, FieldAnswer.session_id == answer_session.id
         )
     )
-    unanswered_fields = db_session.exec(stmt)
+    unanswered_fields = db_session.exec(stmt).all()
     for field in unanswered_fields:
         check_non_existence(
             field,
@@ -576,6 +572,7 @@ async def update_form_field(
     field_id: UUID,
     field_label: str | None = None,
     field_description: str | None = None,
+    field_position: int | None = None,
     field_type: Literal[
         "Boolean", "Numerical", "Text", "Select", "Multiselect"
     ]
@@ -620,6 +617,8 @@ async def update_form_field(
         field.number_bounds = number_bounds
     if text_bounds is not None:
         field.text_bounds = text_bounds
+    if field_position is not None:
+        field.position = field_position
 
     db_session.add(field)
     db_session.commit()

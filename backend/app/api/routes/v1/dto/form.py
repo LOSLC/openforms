@@ -26,7 +26,9 @@ class FormFieldCreationDTO(BaseModel):
     form_id: UUID
     label: str
     description: str
-    field_type: Literal["Boolean", "Numerical", "Text", "Select", "Multiselect"]
+    field_type: Literal[
+        "Boolean", "Numerical", "Text", "Select", "Multiselect"
+    ]
     required: bool = True
     possible_answers: str | None = None
     number_bounds: str | None = None  # min:max
@@ -36,7 +38,10 @@ class FormFieldCreationDTO(BaseModel):
 class FormFieldUpdateDTO(BaseModel):
     label: str | None = None
     description: str | None = None
-    field_type: Literal["Boolean", "Numerical", "Text", "Select", "Multiselect"] | None = None
+    position: int | None = None
+    field_type: (
+        Literal["Boolean", "Numerical", "Text", "Select", "Multiselect"] | None
+    ) = None
     required: bool | None = None
     possible_answers: str | None = None
     number_bounds: str | None = None  # min:max
@@ -48,6 +53,7 @@ class FormFieldDTO(BaseModel):
     form_id: UUID
     label: str
     description: str
+    position: int | None
     required: bool
     field_type: str
     possible_answers: str | None

@@ -214,6 +214,7 @@ async def update_form_field(
         field_id=field_id,
         field_label=field_data.label,
         field_description=field_data.description,
+        field_position=field_data.position,
         field_type=field_data.field_type,
         required=field_data.required,
         possible_answers=field_data.possible_answers,
