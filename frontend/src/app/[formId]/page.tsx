@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetForm, useGetFormFields, useSubmitResponse, useSubmitCurrentSession } from '@/lib/hooks/useForms';
+import { FormHead } from '@/components/FormHead';
 import Link from 'next/link';
 import { Loader2, CheckCircle, Home, ArrowLeft } from 'lucide-react';
 
@@ -413,67 +414,78 @@ export default function FormPage() {
 
   if (formLoading || fieldsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 text-blue-600 mx-auto animate-spin" />
-          <p className="mt-4 text-gray-600">Loading form...</p>
+      <>
+        <FormHead form={form || null} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 text-blue-600 mx-auto animate-spin" />
+            <p className="mt-4 text-gray-600">Loading form...</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!form || !fields) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="text-center py-12">
-            <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-red-600 text-xl">!</span>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Form not found</h3>
-            <p className="text-gray-600 mb-6">
-              The form you&apos;re looking for doesn&apos;t exist or has been removed.
-            </p>
-            <Link href="/">
-              <Button className="w-full h-11">
-                <Home className="h-4 w-4 mr-2" />
-                Go Home
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <FormHead form={null} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+          <Card className="w-full max-w-md">
+            <CardContent className="text-center py-12">
+              <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-red-600 text-xl">!</span>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Form not found</h3>
+              <p className="text-gray-600 mb-6">
+                The form you&apos;re looking for doesn&apos;t exist or has been removed.
+              </p>
+              <Link href="/">
+                <Button className="w-full h-11">
+                  <Home className="h-4 w-4 mr-2" />
+                  Go Home
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="text-center py-16">
-            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="text-green-600 h-8 w-8" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">Thank you!</h3>
-            <p className="text-gray-600 mb-8 leading-relaxed">
-              Your response has been submitted successfully. We appreciate your participation.
-            </p>
-            <Link href="/">
-              <Button className="w-full h-11">
-                <Home className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <FormHead form={form || null} submitted={true} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+          <Card className="w-full max-w-md">
+            <CardContent className="text-center py-16">
+              <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="text-green-600 h-8 w-8" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Thank you!</h3>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                Your response has been submitted successfully. We appreciate your participation.
+              </p>
+              <Link href="/">
+                <Button className="w-full h-11">
+                  <Home className="h-4 w-4 mr-2" />
+                  Back to Home
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 sm:py-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Card className="shadow-lg">
+    <>
+      <FormHead form={form || null} />
+      <div className="min-h-screen bg-gray-50 py-6 sm:py-12">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="shadow-lg">
           <CardHeader className="text-center pb-8 pt-8 sm:pt-12 px-6 sm:px-8">
             <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
               {form.label}
@@ -524,5 +536,6 @@ export default function FormPage() {
         </Card>
       </div>
     </div>
+    </>
   );
 }
