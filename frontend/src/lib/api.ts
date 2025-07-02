@@ -35,6 +35,7 @@ export interface FormFieldDTO {
   form_id: string;
   label: string;
   description: string;
+  position: number | null;
   required: boolean;
   field_type: 'Boolean' | 'Numerical' | 'Text' | 'Select' | 'Multiselect';
   possible_answers: string | null;
@@ -93,6 +94,7 @@ export interface FormFieldCreationRequest {
   label: string;
   description: string;
   field_type: 'Boolean' | 'Numerical' | 'Text' | 'Select' | 'Multiselect';
+  position?: number;
   required?: boolean;
   possible_answers?: string;
   number_bounds?: string;

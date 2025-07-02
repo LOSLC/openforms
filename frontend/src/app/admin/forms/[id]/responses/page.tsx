@@ -57,15 +57,29 @@ export default function FormResponsesPage() {
   const exportToCSV = () => {
     if (!responses || responses.length === 0) return;
 
-    // Get all unique field labels for CSV headers
-    const allFields = new Set<string>();
+    // Get all unique fields and sort them by position
+    const allFieldsMap = new Map<string, { label: string; position: number | null }>();
     responses.forEach(session => {
       session.answers.forEach(answer => {
-        allFields.add(answer.field.label);
+        if (!allFieldsMap.has(answer.field.label)) {
+          allFieldsMap.set(answer.field.label, {
+            label: answer.field.label,
+            position: answer.field.position
+          });
+        }
       });
     });
 
-    const headers = ['Submission ID', 'Submitted', ...Array.from(allFields)];
+    // Sort fields by position and extract labels
+    const sortedFieldLabels = Array.from(allFieldsMap.values())
+      .sort((a, b) => {
+        const posA = a.position ?? 999999;
+        const posB = b.position ?? 999999;
+        return posA - posB;
+      })
+      .map(field => field.label);
+
+    const headers = ['Submission ID', 'Submitted', ...sortedFieldLabels];
     
     // Create CSV rows
     const csvRows = [
@@ -76,8 +90,8 @@ export default function FormResponsesPage() {
           session.submitted ? 'Yes' : 'No'
         ];
         
-        // Add answer values for each field
-        Array.from(allFields).forEach(fieldLabel => {
+        // Add answer values for each field in position order
+        sortedFieldLabels.forEach(fieldLabel => {
           const answer = session.answers.find(a => a.field.label === fieldLabel);
           const value = answer ? formatAnswerValue(answer.value, answer.field.field_type, answer.field.possible_answers) : '';
           // Escape commas and quotes in CSV
@@ -251,7 +265,13 @@ export default function FormResponsesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {session.answers.map((answer) => (
+                    {session.answers
+                      .sort((a, b) => {
+                        const posA = a.field.position ?? 999999;
+                        const posB = b.field.position ?? 999999;
+                        return posA - posB;
+                      })
+                      .map((answer) => (
                       <div key={answer.id} className="border-l-4 border-blue-200 pl-3 sm:pl-4">
                         <div className="flex flex-col lg:flex-row justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">

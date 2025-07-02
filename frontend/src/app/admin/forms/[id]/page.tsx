@@ -1,6 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,7 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useGetForm, useUpdateForm, useDeleteForm, useGetFormFields, useCreateFormField, useUpdateFormField, useDeleteFormField, useCloseForm, useOpenForm } from '@/lib/hooks/useForms';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, GripVertical, Plus } from 'lucide-react';
 
 interface FieldFormData {
   label: string;
@@ -33,11 +53,341 @@ interface FormFieldData {
   possible_answers?: string | null;
   number_bounds?: string | null;
   text_bounds?: string | null;
+  position?: number | null;
+}
+
+interface SortableFieldProps {
+  field: FormFieldData;
+  isEditing: boolean;
+  editingField: string | null;
+  showNewField: boolean;
+  fieldForm: FieldFormData;
+  onStartEdit: (field: FormFieldData) => void;
+  onUpdateField: (fieldId: string) => void;
+  onDeleteField: (fieldId: string) => void;
+  onCancelEdit: () => void;
+  onFieldFormChange: (updates: Partial<FieldFormData>) => void;
+  updateOption: (index: number, value: string) => void;
+  removeOption: (index: number) => void;
+  addOption: () => void;
+  updateFieldMutation: ReturnType<typeof useUpdateFormField>;
+  deleteFieldMutation: ReturnType<typeof useDeleteFormField>;
+  handleFieldTypeChange: (value: FieldFormData['field_type']) => void;
+}
+
+function SortableField({
+  field,
+  isEditing,
+  editingField,
+  showNewField,
+  fieldForm,
+  onStartEdit,
+  onUpdateField,
+  onDeleteField,
+  onCancelEdit,
+  onFieldFormChange,
+  updateOption,
+  removeOption,
+  addOption,
+  updateFieldMutation,
+  deleteFieldMutation,
+  handleFieldTypeChange,
+}: SortableFieldProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: field.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? 'none' : transition,
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 1000 : 'auto',
+    scale: isDragging ? 1.02 : 1,
+  };
+
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      className={`border hover:border-blue-200 hover:shadow-sm transition-all duration-200 ${
+        isDragging 
+          ? 'shadow-lg bg-white/95 backdrop-blur-sm focus:outline-none focus:ring-0 focus-within:ring-0 border-transparent' 
+          : 'shadow-sm'
+      }`}
+    >
+      <CardContent className="p-4">
+        {isEditing ? (
+          <form onSubmit={(e) => { e.preventDefault(); onUpdateField(field.id); }} className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-sm font-medium">Field Label</Label>
+                <Input
+                  value={fieldForm.label}
+                  onChange={(e) => onFieldFormChange({ label: e.target.value })}
+                  required
+                  className="mt-1 h-9"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Field Type</Label>
+                <Select
+                  value={fieldForm.field_type}
+                  onValueChange={handleFieldTypeChange}
+                >
+                  <SelectTrigger className="mt-1 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Text">Text</SelectItem>
+                    <SelectItem value="Numerical">Number</SelectItem>
+                    <SelectItem value="Boolean">Yes/No</SelectItem>
+                    <SelectItem value="Select">Single Choice</SelectItem>
+                    <SelectItem value="Multiselect">Multiple Choice</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Description</Label>
+              <Input
+                value={fieldForm.description}
+                onChange={(e) => onFieldFormChange({ description: e.target.value })}
+                className="mt-1 h-9"
+              />
+            </div>
+
+            {(fieldForm.field_type === 'Select' || fieldForm.field_type === 'Multiselect') && (
+              <div>
+                <Label className="text-sm font-medium">Options</Label>
+                <div className="space-y-2 mt-1">
+                  {fieldForm.options?.map((option, index) => (
+                    <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                      <Input
+                        value={option}
+                        onChange={(e) => updateOption(index, e.target.value)}
+                        placeholder={`Option ${index + 1}`}
+                        className="flex-1 h-8"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeOption(index)}
+                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 w-full sm:w-auto h-8 px-2 text-xs bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 text-white"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addOption}
+                    className="w-full h-8 text-xs"
+                  >
+                    + Add Option
+                  </Button>
+                  {(!fieldForm.options || fieldForm.options.length === 0) && (
+                    <p className="text-xs text-gray-500">Click &quot;Add Option&quot; to create choices for this field.</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {fieldForm.field_type === 'Text' && (
+              <div>
+                <Label className="text-sm font-medium">Text Length Limits</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                  <div>
+                    <Input
+                      type="number"
+                      placeholder="Min length"
+                      min="0"
+                      value={fieldForm.text_bounds?.split(':')[0] || ''}
+                      onChange={(e) => {
+                        const min = e.target.value;
+                        const max = fieldForm.text_bounds?.split(':')[1] || '';
+                        onFieldFormChange({ text_bounds: `${min}:${max}` });
+                      }}
+                      className="h-8"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Min length</p>
+                  </div>
+                  <div>
+                    <Input
+                      type="number"
+                      placeholder="Max length"
+                      min="0"
+                      value={fieldForm.text_bounds?.split(':')[1] || ''}
+                      onChange={(e) => {
+                        const min = fieldForm.text_bounds?.split(':')[0] || '';
+                        const max = e.target.value;
+                        onFieldFormChange({ text_bounds: `${min}:${max}` });
+                      }}
+                      className="h-8"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Max length</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {fieldForm.field_type === 'Numerical' && (
+              <div>
+                <Label className="text-sm font-medium">Number Range Limits</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                  <div>
+                    <Input
+                      type="number"
+                      placeholder="Min value"
+                      step="any"
+                      value={fieldForm.number_bounds?.split(':')[0] || ''}
+                      onChange={(e) => {
+                        const min = e.target.value;
+                        const max = fieldForm.number_bounds?.split(':')[1] || '';
+                        onFieldFormChange({ number_bounds: `${min}:${max}` });
+                      }}
+                      className="h-8"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Min value</p>
+                  </div>
+                  <div>
+                    <Input
+                      type="number"
+                      placeholder="Max value"
+                      step="any"
+                      value={fieldForm.number_bounds?.split(':')[1] || ''}
+                      onChange={(e) => {
+                        const min = fieldForm.number_bounds?.split(':')[0] || '';
+                        const max = e.target.value;
+                        onFieldFormChange({ number_bounds: `${min}:${max}` });
+                      }}
+                      className="h-8"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Max value</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                checked={fieldForm.required}
+                onCheckedChange={(checked) => onFieldFormChange({ required: checked as boolean })}
+              />
+              <Label className="text-sm">Required field</Label>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button type="submit" disabled={updateFieldMutation.isPending} className="w-full sm:w-auto h-8 px-3 text-sm">
+                {updateFieldMutation.isPending ? 'Updating...' : 'Update Field'}
+              </Button>
+              <Button type="button" variant="outline" onClick={onCancelEdit} className="w-full sm:w-auto h-8 px-3 text-sm">
+                Cancel
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3">
+            <div className="flex items-start gap-2 flex-1 min-w-0">
+              <div 
+                {...attributes} 
+                {...listeners}
+                className={`flex items-center justify-center w-5 h-5 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing mt-0.5 ${
+                  isDragging ? 'focus:outline-none focus:ring-0' : ''
+                }`}
+                aria-label="Drag to reorder field"
+              >
+                <GripVertical className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                  <h4 className="font-semibold text-sm sm:text-base text-gray-800 truncate">{field.label}</h4>
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${field.field_type === 'Text' ? 'bg-blue-100 text-blue-800' : 
+                    field.field_type === 'Numerical' ? 'bg-green-100 text-green-800' :
+                    field.field_type === 'Boolean' ? 'bg-purple-100 text-purple-800' :
+                    field.field_type === 'Select' ? 'bg-amber-100 text-amber-800' :
+                    'bg-pink-100 text-pink-800'}`}
+                  >
+                    {field.field_type}
+                  </span>
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${
+                    field.required ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'}`}
+                  >
+                    {field.required ? 'Required' : 'Optional'}
+                  </span>
+                </div>
+                
+                {field.description && (
+                  <p className="text-xs text-gray-600 mb-2">{field.description}</p>
+                )}
+                
+                <div className="flex flex-col gap-1.5 text-xs">
+                  {field.possible_answers && (
+                    <div className="px-2 py-1 bg-gray-100 rounded text-xs break-words">
+                      <span className="font-medium text-gray-700">Options:</span>{' '}
+                      <span className="text-gray-600">{field.possible_answers}</span>
+                    </div>
+                  )}
+                  {field.text_bounds && field.field_type === 'Text' && (
+                    <div className="px-2 py-1 bg-blue-50 rounded text-xs">
+                      <span className="font-medium text-blue-700">Length:</span>{' '}
+                      <span className="text-blue-600">{field.text_bounds.replace(':', ' to ')} chars</span>
+                    </div>
+                  )}
+                  {field.number_bounds && field.field_type === 'Numerical' && (
+                    <div className="px-2 py-1 bg-green-50 rounded text-xs">
+                      <span className="font-medium text-green-700">Range:</span>{' '}
+                      <span className="text-green-600">{field.number_bounds.replace(':', ' to ')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-row lg:flex-col gap-1.5 lg:self-start flex-shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onStartEdit(field)}
+                disabled={showNewField || editingField !== null}
+                className={`h-7 px-2 flex-1 lg:flex-none lg:w-16 text-xs ${
+                  isDragging ? 'focus:outline-none focus:ring-0' : ''
+                }`}
+                aria-label={`Edit ${field.label} field`}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => onDeleteField(field.id)}
+                disabled={deleteFieldMutation.isPending}
+                className={`h-7 px-2 flex-1 lg:flex-none lg:w-16 text-xs bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 text-white ${
+                  isDragging ? 'focus:outline-none focus:ring-0' : ''
+                }`}
+                aria-label={`Delete ${field.label} field`}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function EditFormPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const formId = params.id as string;
 
   const [title, setTitle] = useState('');
@@ -64,12 +414,91 @@ export default function EditFormPage() {
   const closeFormMutation = useCloseForm();
   const openFormMutation = useOpenForm();
 
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Sort fields by position for display
+  const sortedFields = fields ? [...fields].sort((a, b) => {
+    const posA = a.position ?? 999999;
+    const posB = b.position ?? 999999;
+    return posA - posB;
+  }) : [];
+
   useEffect(() => {
     if (form) {
       setTitle(form.label);
       setDescription(form.description || '');
     }
   }, [form]);
+
+  // Handle drag end with optimistic updates
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = sortedFields.findIndex((field) => field.id === active.id);
+      const newIndex = sortedFields.findIndex((field) => field.id === over.id);
+      
+      // Create the new order immediately for optimistic update
+      const newOrder = arrayMove(sortedFields, oldIndex, newIndex);
+      
+      // Get the current cache key for fields (matches useGetFormFields)
+      const fieldsQueryKey = ["form", formId, "fields"];
+      
+      // Store the previous state for potential rollback
+      const previousFields = queryClient.getQueryData(fieldsQueryKey);
+      
+      // Optimistically update the fields cache immediately
+      queryClient.setQueryData(fieldsQueryKey, () => {
+        return newOrder.map((field, index) => ({
+          ...field,
+          position: index
+        }));
+      });
+
+      // Prepare position updates
+      const positionUpdates = newOrder.map((field, index) => ({
+        fieldId: field.id,
+        formId,
+        data: {
+          label: field.label,
+          description: field.description,
+          field_type: field.field_type,
+          required: field.required,
+          possible_answers: field.possible_answers || undefined,
+          number_bounds: field.number_bounds || undefined,
+          text_bounds: field.text_bounds || undefined,
+          position: index,
+        },
+      }));
+
+      try {
+        // Update all positions in parallel
+        await Promise.all(
+          positionUpdates.map(update => 
+            updateFieldMutation.mutateAsync(update)
+          )
+        );
+      } catch (error) {
+        console.error('Failed to update field positions:', error);
+        
+        // Revert the optimistic update on error
+        if (previousFields) {
+          queryClient.setQueryData(fieldsQueryKey, previousFields);
+        }
+      }
+    }
+  };
+
+  // Field form change handler
+  const handleFieldFormChange = (updates: Partial<FieldFormData>) => {
+    setFieldForm(prev => ({ ...prev, ...updates }));
+  };
 
   // Option management functions
   const addOption = () => {
@@ -438,7 +867,7 @@ export default function EditFormPage() {
                 size="sm"
                 onClick={handleDeleteForm}
                 disabled={deleteFormMutation.isPending}
-                className="w-full sm:w-auto border-rose-300 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 text-white"
               >
                 {deleteFormMutation.isPending ? (
                   <>
@@ -546,7 +975,7 @@ export default function EditFormPage() {
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg text-blue-700 flex items-center">
                     <span className="bg-blue-100 p-1 rounded-full mr-2">
-                      <span className="block h-5 w-5 text-blue-600">+</span>
+                      <Plus className="h-5 w-5 text-blue-600" />
                     </span>
                     Add New Field
                   </CardTitle>
@@ -633,7 +1062,7 @@ export default function EditFormPage() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => removeOption(index)}
-                                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 opacity-80 group-hover:opacity-100 w-full sm:w-auto"
+                                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 opacity-80 group-hover:opacity-100 w-full sm:w-auto bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 text-white"
                                   aria-label={`Remove option ${index + 1}`}
                                 >
                                   Remove
@@ -804,253 +1233,41 @@ export default function EditFormPage() {
                   <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
                 ))}
               </div>
-            ) : fields && fields.length > 0 ? (
-              <div className="space-y-5 mt-2">
-                {fields.map((field) => (
-                  <Card key={field.id} className="border hover:border-blue-200 hover:shadow-sm transition-all focus-within:ring-2 focus-within:ring-blue-200 focus-within:ring-opacity-50">
-                    <CardContent className="p-5">
-                      {editingField === field.id ? (
-                        <form onSubmit={(e) => { e.preventDefault(); handleUpdateField(field.id); }} className="space-y-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label className="text-sm font-medium">Field Label</Label>
-                              <Input
-                                value={fieldForm.label}
-                                onChange={(e) => setFieldForm(prev => ({ ...prev, label: e.target.value }))}
-                                required
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-sm font-medium">Field Type</Label>
-                              <Select
-                                value={fieldForm.field_type}
-                                onValueChange={handleFieldTypeChange}
-                              >
-                                <SelectTrigger className="mt-1">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Text">Text</SelectItem>
-                                  <SelectItem value="Numerical">Number</SelectItem>
-                                  <SelectItem value="Boolean">Yes/No</SelectItem>
-                                  <SelectItem value="Select">Single Choice</SelectItem>
-                                  <SelectItem value="Multiselect">Multiple Choice</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <Label className="text-sm font-medium">Description</Label>
-                            <Input
-                              value={fieldForm.description}
-                              onChange={(e) => setFieldForm(prev => ({ ...prev, description: e.target.value }))}
-                              className="mt-1"
-                            />
-                          </div>
-
-                          {(fieldForm.field_type === 'Select' || fieldForm.field_type === 'Multiselect') && (
-                            <div>
-                              <Label className="text-sm font-medium">Options</Label>
-                              <div className="space-y-2 mt-1">
-                                {fieldForm.options?.map((option, index) => (
-                                  <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                    <Input
-                                      value={option}
-                                      onChange={(e) => updateOption(index, e.target.value)}
-                                      placeholder={`Option ${index + 1}`}
-                                      className="flex-1"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => removeOption(index)}
-                                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 w-full sm:w-auto"
-                                    >
-                                      Remove
-                                    </Button>
-                                  </div>
-                                ))}
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={addOption}
-                                  className="w-full"
-                                >
-                                  + Add Option
-                                </Button>
-                                {(!fieldForm.options || fieldForm.options.length === 0) && (
-                                  <p className="text-xs sm:text-sm text-gray-500">Click &quot;Add Option&quot; to create choices for this field.</p>
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {fieldForm.field_type === 'Text' && (
-                            <div>
-                              <Label className="text-sm font-medium">Text Length Limits</Label>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
-                                <div>
-                                  <Input
-                                    type="number"
-                                    placeholder="Min length"
-                                    min="0"
-                                    value={fieldForm.text_bounds?.split(':')[0] || ''}
-                                    onChange={(e) => {
-                                      const min = e.target.value;
-                                      const max = fieldForm.text_bounds?.split(':')[1] || '';
-                                      setFieldForm(prev => ({ ...prev, text_bounds: `${min}:${max}` }));
-                                    }}
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">Minimum length (optional)</p>
-                                </div>
-                                <div>
-                                  <Input
-                                    type="number"
-                                    placeholder="Max length"
-                                    min="0"
-                                    value={fieldForm.text_bounds?.split(':')[1] || ''}
-                                    onChange={(e) => {
-                                      const min = fieldForm.text_bounds?.split(':')[0] || '';
-                                      const max = e.target.value;
-                                      setFieldForm(prev => ({ ...prev, text_bounds: `${min}:${max}` }));
-                                    }}
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">Maximum length (optional)</p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {fieldForm.field_type === 'Numerical' && (
-                            <div>
-                              <Label className="text-sm font-medium">Number Range Limits</Label>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
-                                <div>
-                                  <Input
-                                    type="number"
-                                    placeholder="Min value"
-                                    step="any"
-                                    value={fieldForm.number_bounds?.split(':')[0] || ''}
-                                    onChange={(e) => {
-                                      const min = e.target.value;
-                                      const max = fieldForm.number_bounds?.split(':')[1] || '';
-                                      setFieldForm(prev => ({ ...prev, number_bounds: `${min}:${max}` }));
-                                    }}
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">Minimum value (optional)</p>
-                                </div>
-                                <div>
-                                  <Input
-                                    type="number"
-                                    placeholder="Max value"
-                                    step="any"
-                                    value={fieldForm.number_bounds?.split(':')[1] || ''}
-                                    onChange={(e) => {
-                                      const min = fieldForm.number_bounds?.split(':')[0] || '';
-                                      const max = e.target.value;
-                                      setFieldForm(prev => ({ ...prev, number_bounds: `${min}:${max}` }));
-                                    }}
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">Maximum value (optional)</p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              checked={fieldForm.required}
-                              onCheckedChange={(checked) => setFieldForm(prev => ({ ...prev, required: checked as boolean }))}
-                            />
-                            <Label className="text-sm">Required field</Label>
-                          </div>
-
-                          <div className="flex flex-col sm:flex-row gap-2">
-                            <Button type="submit" disabled={updateFieldMutation.isPending} className="w-full sm:w-auto">
-                              {updateFieldMutation.isPending ? 'Updating...' : 'Update Field'}
-                            </Button>
-                            <Button type="button" variant="outline" onClick={cancelEdit} className="w-full sm:w-auto">
-                              Cancel
-                            </Button>
-                          </div>
-                        </form>
-                      ) : (
-                        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                              <h4 className="font-semibold text-base sm:text-lg text-gray-800 truncate">{field.label}</h4>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${field.field_type === 'Text' ? 'bg-blue-100 text-blue-800' : 
-                                field.field_type === 'Numerical' ? 'bg-green-100 text-green-800' :
-                                field.field_type === 'Boolean' ? 'bg-purple-100 text-purple-800' :
-                                field.field_type === 'Select' ? 'bg-amber-100 text-amber-800' :
-                                'bg-pink-100 text-pink-800'}`}
-                              >
-                                {field.field_type}
-                              </span>
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                                field.required ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'}`}
-                              >
-                                {field.required ? 'Required' : 'Optional'}
-                              </span>
-                            </div>
-                            
-                            {field.description && (
-                              <p className="text-sm text-gray-600 mb-3">{field.description}</p>
-                            )}
-                            
-                            <div className="flex flex-col gap-2 text-xs">
-                              {field.possible_answers && (
-                                <div className="px-3 py-1.5 bg-gray-100 rounded-md break-words">
-                                  <span className="font-medium text-gray-700">Options:</span>{' '}
-                                  <span className="text-gray-600">{field.possible_answers}</span>
-                                </div>
-                              )}
-                              {field.text_bounds && field.field_type === 'Text' && (
-                                <div className="px-3 py-1.5 bg-blue-50 rounded-md">
-                                  <span className="font-medium text-blue-700">Length:</span>{' '}
-                                  <span className="text-blue-600">{field.text_bounds.replace(':', ' to ')} chars</span>
-                                </div>
-                              )}
-                              {field.number_bounds && field.field_type === 'Numerical' && (
-                                <div className="px-3 py-1.5 bg-green-50 rounded-md">
-                                  <span className="font-medium text-green-700">Range:</span>{' '}
-                                  <span className="text-green-600">{field.number_bounds.replace(':', ' to ')}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex flex-row lg:flex-col gap-2 lg:self-start flex-shrink-0">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => startEditField(field)}
-                              disabled={showNewField || editingField !== null}
-                              className="h-9 px-3 flex-1 lg:flex-none lg:w-20"
-                              aria-label={`Edit ${field.label} field`}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteField(field.id)}
-                              disabled={deleteFieldMutation.isPending}
-                              className="h-9 px-3 border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800 flex-1 lg:flex-none lg:w-20"
-                              aria-label={`Delete ${field.label} field`}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+            ) : sortedFields && sortedFields.length > 0 ? (
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext 
+                  items={sortedFields.map(field => field.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-5 mt-2">
+                    {sortedFields.map((field) => (
+                      <SortableField
+                        key={field.id}
+                        field={field}
+                        isEditing={editingField === field.id}
+                        editingField={editingField}
+                        showNewField={showNewField}
+                        fieldForm={fieldForm}
+                        onStartEdit={startEditField}
+                        onUpdateField={handleUpdateField}
+                        onDeleteField={handleDeleteField}
+                        onCancelEdit={cancelEdit}
+                        onFieldFormChange={handleFieldFormChange}
+                        updateOption={updateOption}
+                        removeOption={removeOption}
+                        addOption={addOption}
+                        updateFieldMutation={updateFieldMutation}
+                        deleteFieldMutation={deleteFieldMutation}
+                        handleFieldTypeChange={handleFieldTypeChange}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             ) : (
               <div className="text-center py-12 px-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                 <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
