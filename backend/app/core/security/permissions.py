@@ -183,16 +183,12 @@ class PermissionChecker(BaseModel):
 
     def check(self, either: bool = False, message: str | None = None) -> bool:
         def has_role():
-            if self.bypass_role in [
+            role_names = [
                 role.name for role in self.roles if role.name is not None
-            ]:
-                return True
-            for role in [
-                role.name for role in self.roles if role.name is not None
-            ]:
-                if role in self.bypass_roles:
-                    return True
-            return False
+            ]
+            return self.bypass_role in role_names or any(
+                role in self.bypass_roles for role in role_names
+            )
 
         if has_role():
             return True
