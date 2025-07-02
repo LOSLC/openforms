@@ -26,6 +26,7 @@ interface FormField {
   possible_answers?: string | null;
   number_bounds?: string | null;
   text_bounds?: string | null;
+  position?: number | null;
 }
 
 export default function FormPage() {
@@ -498,7 +499,11 @@ export default function FormPage() {
           </CardHeader>
           <CardContent className="px-6 sm:px-8 pb-8 sm:pb-12">
             <div className="space-y-8">
-              {fields.map(renderField)}
+              {[...fields].sort((a, b) => {
+                const posA = a.position ?? 999999;
+                const posB = b.position ?? 999999;
+                return posA - posB;
+              }).map(renderField)}
             </div>
             
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 mt-8 border-t border-gray-200">

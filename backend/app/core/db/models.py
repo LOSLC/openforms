@@ -103,6 +103,7 @@ class FormField(SQLModel, table=True):
     form_id: uuid.UUID = Field(foreign_key="form.id")
     label: str
     description: str
+    position: int | None = None
     required: bool = True
     field_type: str  # Boolean, Numerical, Text, Multiselect, Select
     possible_answers: (
@@ -128,6 +129,7 @@ class FormField(SQLModel, table=True):
             form_id=self.form_id,
             label=self.label,
             description=self.description,
+            position=self.position,
             required=self.required,
             field_type=self.field_type,
             possible_answers=self.possible_answers,
