@@ -49,6 +49,23 @@ export default function FormResponsesPage() {
           return value;
         }
         return value;
+      case 'Currency':
+        const numValue = parseFloat(value);
+        return isNaN(numValue) ? value : `$${numValue.toFixed(2)}`;
+      case 'Date':
+        try {
+          const date = new Date(value);
+          return date.toLocaleDateString();
+        } catch {
+          return value;
+        }
+      case 'Email':
+      case 'Phone':
+      case 'URL':
+      case 'Text':
+      case 'Numerical':
+      case 'Alpha':
+      case 'Alphanum':
       default:
         return value;
     }

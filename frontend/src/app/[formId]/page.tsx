@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { useGetForm, useGetFormFields, useSubmitResponse, useSubmitCurrentSession } from '@/lib/hooks/useForms';
 import { FormHead } from '@/components/FormHead';
 import Link from 'next/link';
@@ -21,7 +22,7 @@ interface FormField {
   id: string;
   label: string;
   description?: string;
-  field_type: 'Text' | 'Numerical' | 'Boolean' | 'Select' | 'Multiselect';
+  field_type: 'Text' | 'LongText' | 'Numerical' | 'Boolean' | 'Select' | 'Multiselect' | 'Email' | 'Phone' | 'Currency' | 'Date' | 'URL' | 'Alpha' | 'Alphanum';
   required: boolean;
   possible_answers?: string | null;
   number_bounds?: string | null;
@@ -55,6 +56,9 @@ export default function FormPage() {
 
     switch (field.field_type) {
       case 'Text':
+      case 'LongText':
+      case 'Alpha':
+      case 'Alphanum':
         if (field.text_bounds) {
           const [min, max] = field.text_bounds.split(':').map(Number);
           if (min && value.length < min) {
@@ -64,12 +68,24 @@ export default function FormPage() {
             return `${field.label} must be no more than ${max} characters`;
           }
         }
+        
+        // Additional validation for Alpha and Alphanum
+        if (field.field_type === 'Alpha' && !/^[a-zA-Z\s]*$/.test(value)) {
+          return `${field.label} must contain only letters and spaces`;
+        }
+        if (field.field_type === 'Alphanum' && !/^[a-zA-Z0-9\s]*$/.test(value)) {
+          return `${field.label} must contain only letters, numbers, and spaces`;
+        }
         break;
 
       case 'Numerical':
+      case 'Currency':
         const numValue = Number(value);
         if (isNaN(numValue)) {
           return `${field.label} must be a valid number`;
+        }
+        if (field.field_type === 'Currency' && numValue < 0) {
+          return `${field.label} must be a positive value`;
         }
         if (field.number_bounds) {
           const [min, max] = field.number_bounds.split(':').map(Number);
@@ -79,6 +95,40 @@ export default function FormPage() {
           if (max !== undefined && numValue > max) {
             return `${field.label} must be no more than ${max}`;
           }
+        }
+        break;
+
+      case 'Email':
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+          return `${field.label} must be a valid email address`;
+        }
+        break;
+
+      case 'Phone':
+        // Validate phone number in international format (starts with +)
+        if (!value.startsWith('+')) {
+          return `${field.label} must be a valid international phone number`;
+        }
+        // Basic validation - should be at least 10 digits after the +
+        const phoneDigits = value.replace(/\D/g, '');
+        if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+          return `${field.label} must be a valid phone number`;
+        }
+        break;
+
+      case 'URL':
+        try {
+          new URL(value);
+        } catch {
+          return `${field.label} must be a valid URL`;
+        }
+        break;
+
+      case 'Date':
+        const dateValue = new Date(value);
+        if (isNaN(dateValue.getTime())) {
+          return `${field.label} must be a valid date`;
         }
         break;
 
@@ -184,6 +234,37 @@ export default function FormPage() {
               placeholder={`Enter ${field.label.toLowerCase()}...`}
               required={field.required}
               className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+              aria-describedby={field.description ? `${field.id}-desc` : undefined}
+              maxLength={field.text_bounds ? Number(field.text_bounds.split(':')[1]) || undefined : undefined}
+            />
+            {validationErrors[field.id] && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <span>⚠</span> {validationErrors[field.id]}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'LongText':
+        return (
+          <div key={field.id} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-gray-500">{field.description}</p>
+              )}
+            </div>
+            <textarea
+              id={field.id}
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              required={field.required}
+              rows={4}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm text-base resize-y min-h-[100px] ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
               aria-describedby={field.description ? `${field.id}-desc` : undefined}
               maxLength={field.text_bounds ? Number(field.text_bounds.split(':')[1]) || undefined : undefined}
             />
@@ -326,7 +407,7 @@ export default function FormPage() {
         );
 
       case 'Select':
-        const options = field.possible_answers?.split(',') || [];
+        const options = field.possible_answers?.split('\\') || [];
         return (
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
@@ -357,7 +438,7 @@ export default function FormPage() {
         );
 
       case 'Multiselect':
-        const multiOptions = field.possible_answers?.split(',') || [];
+        const multiOptions = field.possible_answers?.split('\\') || [];
         const selectedValues = value ? value.split(',') : [];
         
         return (
@@ -405,6 +486,214 @@ export default function FormPage() {
                 </p>
               )}
             </div>
+          </div>
+        );
+
+      case 'Email':
+        return (
+          <div key={field.id} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-gray-500">{field.description}</p>
+              )}
+            </div>
+            <Input
+              id={field.id}
+              type="email"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              required={field.required}
+              className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+            />
+            {validationErrors[field.id] && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <span>⚠</span> {validationErrors[field.id]}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'Phone':
+        return (
+          <div key={field.id} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-gray-500">{field.description}</p>
+              )}
+            </div>
+            <PhoneInput
+              value={value}
+              onChange={(val) => handleFieldChange(field.id, val || '')}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              className={validationErrors[field.id] ? 'border-red-500' : ''}
+              aria-describedby={field.description ? `${field.id}-desc` : undefined}
+            />
+            {validationErrors[field.id] && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <span>⚠</span> {validationErrors[field.id]}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'URL':
+        return (
+          <div key={field.id} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-gray-500">{field.description}</p>
+              )}
+            </div>
+            <Input
+              id={field.id}
+              type="url"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              required={field.required}
+              className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+            />
+            {validationErrors[field.id] && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <span>⚠</span> {validationErrors[field.id]}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'Date':
+        return (
+          <div key={field.id} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-gray-500">{field.description}</p>
+              )}
+            </div>
+            <Input
+              id={field.id}
+              type="date"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.required}
+              className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+            />
+            {validationErrors[field.id] && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <span>⚠</span> {validationErrors[field.id]}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'Currency':
+        return (
+          <div key={field.id} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-gray-500">{field.description}</p>
+              )}
+            </div>
+            <Input
+              id={field.id}
+              type="number"
+              step="0.01"
+              min="0"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              required={field.required}
+              className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+            />
+            {validationErrors[field.id] && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <span>⚠</span> {validationErrors[field.id]}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'Alpha':
+        return (
+          <div key={field.id} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-gray-500">{field.description}</p>
+              )}
+            </div>
+            <Input
+              id={field.id}
+              value={value}
+              onChange={(e) => {
+                // Only allow letters and spaces
+                const alphaValue = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                handleFieldChange(field.id, alphaValue);
+              }}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              required={field.required}
+              className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+            />
+            {validationErrors[field.id] && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <span>⚠</span> {validationErrors[field.id]}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'Alphanum':
+        return (
+          <div key={field.id} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
+                {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
+              </Label>
+              {field.description && (
+                <p className="text-sm text-gray-500">{field.description}</p>
+              )}
+            </div>
+            <Input
+              id={field.id}
+              value={value}
+              onChange={(e) => {
+                // Only allow letters, numbers, and spaces
+                const alphanumValue = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
+                handleFieldChange(field.id, alphanumValue);
+              }}
+              placeholder={`Enter ${field.label.toLowerCase()}...`}
+              required={field.required}
+              className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+            />
+            {validationErrors[field.id] && (
+              <p className="text-sm text-red-600 flex items-center gap-1">
+                <span>⚠</span> {validationErrors[field.id]}
+              </p>
+            )}
           </div>
         );
 

@@ -3,6 +3,22 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
+FormFieldType = Literal[
+    "Boolean",
+    "Numerical",
+    "Text",
+    "LongText",
+    "Select",
+    "Multiselect",
+    "Email",
+    "Phone",
+    "Currency",
+    "Date",
+    "URL",
+    "Alpha",
+    "Alphanum"
+]
+
 
 class FormCreationDTO(BaseModel):
     label: str
@@ -26,9 +42,7 @@ class FormFieldCreationDTO(BaseModel):
     form_id: UUID
     label: str
     description: str
-    field_type: Literal[
-        "Boolean", "Numerical", "Text", "Select", "Multiselect"
-    ]
+    field_type: FormFieldType
     required: bool = True
     possible_answers: str | None = None
     number_bounds: str | None = None  # min:max
@@ -39,9 +53,7 @@ class FormFieldUpdateDTO(BaseModel):
     label: str | None = None
     description: str | None = None
     position: int | None = None
-    field_type: (
-        Literal["Boolean", "Numerical", "Text", "Select", "Multiselect"] | None
-    ) = None
+    field_type: FormFieldType | None = None
     required: bool | None = None
     possible_answers: str | None = None
     number_bounds: str | None = None  # min:max
