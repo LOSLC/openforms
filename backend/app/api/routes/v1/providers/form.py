@@ -1,7 +1,9 @@
-from typing import Literal
+from datetime import date
 from uuid import UUID
 
+import phonenumbers
 from fastapi import HTTPException, Response
+from pydantic import EmailStr, HttpUrl, TypeAdapter, constr
 from sqlmodel import Session, select
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
@@ -9,7 +11,7 @@ from starlette.status import (
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from app.api.routes.v1.dto.form import ResponseCreationDTO
+from app.api.routes.v1.dto.form import FormFieldType, ResponseCreationDTO
 from app.api.routes.v1.dto.message import MessageResponse
 from app.core.db.builders.permission import PermissionBuilder
 from app.core.db.builders.role import RoleBuilder
@@ -77,9 +79,7 @@ async def add_field_to_form(
     form_id: UUID,
     field_label: str,
     field_description: str,
-    field_type: Literal[
-        "Boolean", "Numerical", "Text", "Select", "Multiselect"
-    ],
+    field_type: FormFieldType,
     required: bool = True,
     possible_answers: str | None = None,
     number_bounds: str | None = None,
@@ -109,7 +109,10 @@ async def add_field_to_form(
         required=required,
     )
     check_conditions(
-        [not (field_type == "Multiselect" and possible_answers is None)]
+        [
+            not (field_type == "Select" and possible_answers is None),
+            not (field_type == "Multiselect" and possible_answers is None),
+        ]
     )
     field.possible_answers = possible_answers
     field.number_bounds = number_bounds
@@ -166,7 +169,7 @@ def validate_answer(answer: str | None, field: FormField):
         else None
     )
     possible_answers = (
-        [field.strip() for field in field.possible_answers.split(",")]
+        [field.strip() for field in field.possible_answers.split("\\")]
         if field.possible_answers is not None
         else None
     )
@@ -204,7 +207,10 @@ def validate_answer(answer: str | None, field: FormField):
                     )
                 ),
                 not (
-                    field.field_type == "Text"
+                    (
+                        field.field_type == "Text"
+                        or field.field_type == "LongText"
+                    )
                     and text_bounds is not None
                     and not (
                         len(value) >= (text_bounds or [0, 0])[0]
@@ -215,6 +221,30 @@ def validate_answer(answer: str | None, field: FormField):
             status_code=HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Could not validate answer",
         )
+        # Pydantic validation
+        match field.field_type:
+            case "Email":
+                TypeAdapter(EmailStr).validate_python(value)
+            case "Phone":
+                try:
+                    parsed_phonenumber = phonenumbers.parse(value)
+                    check_conditions(
+                        [phonenumbers.is_valid_number(parsed_phonenumber)]
+                    )
+                except phonenumbers.NumberParseException:
+                    raise HTTPException(
+                        status_code=HTTP_422_UNPROCESSABLE_ENTITY
+                    )
+            case "Date":
+                TypeAdapter(date).validate_python(value)
+            case "URL":
+                TypeAdapter(HttpUrl).validate_python(value)
+            case "Alpha":
+                AlphaStr = constr(pattern=r"^[a-zA-Z]+$")
+                TypeAdapter(AlphaStr).validate_python(value)
+            case "Alphanum":
+                AlphanumStr = constr(pattern=r"^[a-zA-Z0-9]+$")
+                TypeAdapter(AlphanumStr).validate_python(value)
     except Exception:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -573,10 +603,7 @@ async def update_form_field(
     field_label: str | None = None,
     field_description: str | None = None,
     field_position: int | None = None,
-    field_type: Literal[
-        "Boolean", "Numerical", "Text", "Select", "Multiselect"
-    ]
-    | None = None,
+    field_type: FormFieldType | None = None,
     required: bool | None = None,
     possible_answers: str | None = None,
     number_bounds: str | None = None,

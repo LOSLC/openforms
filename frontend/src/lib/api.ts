@@ -37,7 +37,7 @@ export interface FormFieldDTO {
   description: string;
   position: number | null;
   required: boolean;
-  field_type: 'Boolean' | 'Numerical' | 'Text' | 'Select' | 'Multiselect';
+  field_type: 'Boolean' | 'Numerical' | 'Text' | 'LongText' | 'Select' | 'Multiselect' | 'Email' | 'Phone' | 'Currency' | 'Date' | 'URL' | 'Alpha' | 'Alphanum';
   possible_answers: string | null;
   number_bounds: string | null;
   text_bounds: string | null;
@@ -93,7 +93,7 @@ export interface FormFieldCreationRequest {
   form_id: string;
   label: string;
   description: string;
-  field_type: 'Boolean' | 'Numerical' | 'Text' | 'Select' | 'Multiselect';
+  field_type: 'Boolean' | 'Numerical' | 'Text' | 'LongText' | 'Select' | 'Multiselect' | 'Email' | 'Phone' | 'Currency' | 'Date' | 'URL' | 'Alpha' | 'Alphanum';
   position?: number;
   required?: boolean;
   possible_answers?: string;

@@ -36,7 +36,7 @@ import { CheckCircle, XCircle, Loader2, GripVertical, Plus } from 'lucide-react'
 interface FieldFormData {
   label: string;
   description: string;
-  field_type: 'Text' | 'Numerical' | 'Boolean' | 'Select' | 'Multiselect';
+  field_type: 'Text' | 'LongText' | 'Numerical' | 'Boolean' | 'Select' | 'Multiselect' | 'Email' | 'Phone' | 'Currency' | 'Date' | 'URL' | 'Alpha' | 'Alphanum';
   required: boolean;
   possible_answers?: string;
   options?: string[];
@@ -48,7 +48,7 @@ interface FormFieldData {
   id: string;
   label: string;
   description: string;
-  field_type: 'Text' | 'Numerical' | 'Boolean' | 'Select' | 'Multiselect';
+  field_type: 'Text' | 'LongText' | 'Numerical' | 'Boolean' | 'Select' | 'Multiselect' | 'Email' | 'Phone' | 'Currency' | 'Date' | 'URL' | 'Alpha' | 'Alphanum';
   required: boolean;
   possible_answers?: string | null;
   number_bounds?: string | null;
@@ -144,10 +144,18 @@ function SortableField({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Text">Text</SelectItem>
+                    <SelectItem value="LongText">Long Text</SelectItem>
                     <SelectItem value="Numerical">Number</SelectItem>
                     <SelectItem value="Boolean">Yes/No</SelectItem>
                     <SelectItem value="Select">Single Choice</SelectItem>
                     <SelectItem value="Multiselect">Multiple Choice</SelectItem>
+                    <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="Phone">Phone</SelectItem>
+                    <SelectItem value="Currency">Currency</SelectItem>
+                    <SelectItem value="Date">Date</SelectItem>
+                    <SelectItem value="URL">URL</SelectItem>
+                    <SelectItem value="Alpha">Alphabetic</SelectItem>
+                    <SelectItem value="Alphanum">Alphanumeric</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -201,7 +209,7 @@ function SortableField({
               </div>
             )}
 
-            {fieldForm.field_type === 'Text' && (
+            {(fieldForm.field_type === 'Text' || fieldForm.field_type === 'LongText') && (
               <div>
                 <Label className="text-sm font-medium">Text Length Limits</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
@@ -310,11 +318,21 @@ function SortableField({
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">
                   <h4 className="font-semibold text-sm sm:text-base text-gray-800 truncate">{field.label}</h4>
-                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${field.field_type === 'Text' ? 'bg-blue-100 text-blue-800' : 
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${
+                    field.field_type === 'Text' ? 'bg-blue-100 text-blue-800' : 
+                    field.field_type === 'LongText' ? 'bg-slate-100 text-slate-800' :
                     field.field_type === 'Numerical' ? 'bg-green-100 text-green-800' :
                     field.field_type === 'Boolean' ? 'bg-purple-100 text-purple-800' :
                     field.field_type === 'Select' ? 'bg-amber-100 text-amber-800' :
-                    'bg-pink-100 text-pink-800'}`}
+                    field.field_type === 'Multiselect' ? 'bg-pink-100 text-pink-800' :
+                    field.field_type === 'Email' ? 'bg-cyan-100 text-cyan-800' :
+                    field.field_type === 'Phone' ? 'bg-indigo-100 text-indigo-800' :
+                    field.field_type === 'Currency' ? 'bg-emerald-100 text-emerald-800' :
+                    field.field_type === 'Date' ? 'bg-violet-100 text-violet-800' :
+                    field.field_type === 'URL' ? 'bg-sky-100 text-sky-800' :
+                    field.field_type === 'Alpha' ? 'bg-orange-100 text-orange-800' :
+                    field.field_type === 'Alphanum' ? 'bg-teal-100 text-teal-800' :
+                    'bg-gray-100 text-gray-800'}`}
                   >
                     {field.field_type}
                   </span>
@@ -336,7 +354,7 @@ function SortableField({
                       <span className="text-gray-600">{field.possible_answers}</span>
                     </div>
                   )}
-                  {field.text_bounds && field.field_type === 'Text' && (
+                  {field.text_bounds && (field.field_type === 'Text' || field.field_type === 'LongText') && (
                     <div className="px-2 py-1 bg-blue-50 rounded text-xs">
                       <span className="font-medium text-blue-700">Length:</span>{' '}
                       <span className="text-blue-600">{field.text_bounds.replace(':', ' to ')} chars</span>
@@ -557,7 +575,7 @@ export default function EditFormPage() {
       ...rest,
       text_bounds: processedTextBounds,
       number_bounds: processedNumberBounds,
-      possible_answers: options && options.length > 0 ? options.filter(opt => opt.trim()).join(', ') : undefined
+      possible_answers: options && options.length > 0 ? options.filter(opt => opt.trim()).join('\\') : undefined
     };
   };
 
@@ -622,7 +640,7 @@ export default function EditFormPage() {
     }
     
     // Validate text bounds - ensure both min and max are provided if either is provided
-    if (fieldForm.field_type === 'Text' && fieldForm.text_bounds) {
+    if ((fieldForm.field_type === 'Text' || fieldForm.field_type === 'LongText') && fieldForm.text_bounds) {
       const [min, max] = fieldForm.text_bounds.split(':');
       if ((min && min.trim() !== '' && (!max || max.trim() === '')) || 
           (max && max.trim() !== '' && (!min || min.trim() === ''))) {
@@ -672,7 +690,7 @@ export default function EditFormPage() {
     }
     
     // Validate text bounds - ensure both min and max are provided if either is provided
-    if (fieldForm.field_type === 'Text' && fieldForm.text_bounds) {
+    if ((fieldForm.field_type === 'Text' || fieldForm.field_type === 'LongText') && fieldForm.text_bounds) {
       const [min, max] = fieldForm.text_bounds.split(':');
       if ((min && min.trim() !== '' && (!max || max.trim() === '')) || 
           (max && max.trim() !== '' && (!min || min.trim() === ''))) {
@@ -731,7 +749,7 @@ export default function EditFormPage() {
       field_type: field.field_type,
       required: field.required,
       possible_answers: field.possible_answers || '',
-      options: field.possible_answers ? field.possible_answers.split(', ').map((opt: string) => opt.trim()) : [],
+      options: field.possible_answers ? field.possible_answers.split('\\').map((opt: string) => opt.trim()) : [],
       number_bounds: field.number_bounds || '',
       text_bounds: field.text_bounds || '',
     });
@@ -1010,10 +1028,18 @@ export default function EditFormPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Text">Text</SelectItem>
+                            <SelectItem value="LongText">Long Text</SelectItem>
                             <SelectItem value="Numerical">Number</SelectItem>
                             <SelectItem value="Boolean">Yes/No</SelectItem>
                             <SelectItem value="Select">Single Choice</SelectItem>
                             <SelectItem value="Multiselect">Multiple Choice</SelectItem>
+                            <SelectItem value="Email">Email</SelectItem>
+                            <SelectItem value="Phone">Phone</SelectItem>
+                            <SelectItem value="Currency">Currency</SelectItem>
+                            <SelectItem value="Date">Date</SelectItem>
+                            <SelectItem value="URL">URL</SelectItem>
+                            <SelectItem value="Alpha">Alphabetic</SelectItem>
+                            <SelectItem value="Alphanum">Alphanumeric</SelectItem>
                           </SelectContent>
                         </Select>
                         <p id="type-description" className="text-xs text-gray-500">
@@ -1089,7 +1115,7 @@ export default function EditFormPage() {
                         </div>
                     )}
 
-                    {fieldForm.field_type === 'Text' && (
+                    {(fieldForm.field_type === 'Text' || fieldForm.field_type === 'LongText') && (
                       <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
                         <Label className="text-sm font-medium">Text Length Limits</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
