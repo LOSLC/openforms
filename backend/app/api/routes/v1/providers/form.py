@@ -240,10 +240,10 @@ def validate_answer(answer: str | None, field: FormField):
             case "URL":
                 TypeAdapter(HttpUrl).validate_python(value)
             case "Alpha":
-                AlphaStr = constr(pattern=r"^[a-zA-Z]+$")
+                AlphaStr = constr(pattern=r"^[a-zA-Z ]+$")
                 TypeAdapter(AlphaStr).validate_python(value)
             case "Alphanum":
-                AlphanumStr = constr(pattern=r"^[a-zA-Z0-9]+$")
+                AlphanumStr = constr(pattern=r"^[a-zA-Z0-9 ]+$")
                 TypeAdapter(AlphanumStr).validate_python(value)
     except Exception:
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY)
