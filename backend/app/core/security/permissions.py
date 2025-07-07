@@ -156,7 +156,7 @@ class PermissionChecker(BaseModel):
     db_session: Session
     roles: list[Role]
     bypass_role: str | None = None
-    bypass_roles: list[str | None] = []
+    bypass_roles: list[str] = []
     pcheck_models: Sequence[PermissionCheckModel | GlobalPermissionCheckModel]
 
     def _is_allowed(
