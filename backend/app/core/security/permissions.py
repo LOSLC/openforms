@@ -187,7 +187,9 @@ class PermissionChecker(BaseModel):
                 role.name for role in self.roles if role.name is not None
             ]
             return self.bypass_role in role_names or any(
-                role in self.bypass_roles for role in role_names
+                role in self.bypass_roles
+                for role in role_names
+                if role is not None
             )
 
         if has_role():
