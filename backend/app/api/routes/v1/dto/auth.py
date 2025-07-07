@@ -22,3 +22,13 @@ class UserResponseDTO(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AccountVerificationDTO(BaseModel):
+    token: str
+    session_id: str
+
+
+class LoginVerificationDTO(BaseModel):
+    token: str
+    session_id: str

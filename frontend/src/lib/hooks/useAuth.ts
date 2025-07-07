@@ -37,3 +37,37 @@ export const useCurrentUser = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
+
+export const useVerifyAccount = () => {
+  return useMutation({
+    mutationFn: authService.verifyAccount,
+  });
+};
+
+export const useVerifyLogin = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: authService.verifyLogin,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+};
+
+export const useSendVerificationEmail = () => {
+  return useMutation({
+    mutationFn: authService.sendVerificationEmail,
+  });
+};
+
+export const useVerifyLoginOtp = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: authService.verifyLoginOtp,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+};

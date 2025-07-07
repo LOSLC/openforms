@@ -156,7 +156,7 @@ class PermissionChecker(BaseModel):
     db_session: Session
     roles: list[Role]
     bypass_role: str | None = None
-    bypass_roles: list[str | None] = []
+    bypass_roles: list[str] = []
     pcheck_models: Sequence[PermissionCheckModel | GlobalPermissionCheckModel]
 
     def _is_allowed(
@@ -187,7 +187,9 @@ class PermissionChecker(BaseModel):
                 role.name for role in self.roles if role.name is not None
             ]
             return self.bypass_role in role_names or any(
-                role in self.bypass_roles for role in role_names
+                role in self.bypass_roles
+                for role in role_names
+                if role is not None
             )
 
         if has_role():
