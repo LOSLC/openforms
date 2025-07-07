@@ -2,6 +2,7 @@ services:
   frontend:
     build: 
       context: ./frontend
+      network: host
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_SHOW_LANDING_PAGE: ${NEXT_PUBLIC_SHOW_LANDING_PAGE}
@@ -15,7 +16,9 @@ services:
 
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      network: host
     ports:
       - "${BACKEND_PORT}:8000"
     depends_on:
