@@ -10,7 +10,7 @@ from app.api.routes.v1.dto.form import (
     FormDTO,
     FormFieldDTO,
 )
-from app.utils.crypto import gen_id
+from app.utils.crypto import gen_id, gen_otp
 
 
 class RoleUserLink(SQLModel, table=True):
@@ -24,6 +24,10 @@ class User(SQLModel, table=True):
     username: str
     hashed_password: str
     name: str
+    registered_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    verified: bool = False
     login_sessions: list["LoginSession"] = Relationship(
         back_populates="user",
         cascade_delete=True,
@@ -41,6 +45,11 @@ class User(SQLModel, table=True):
     )
     forms: List["Form"] = Relationship(
         back_populates="author",
+        cascade_delete=True,
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
+    verification_sessions: List["AccountVerificationSession"] = Relationship(
+        back_populates="user",
         cascade_delete=True,
         sa_relationship_kwargs={"lazy": "selectin"},
     )
@@ -202,13 +211,31 @@ class LoginSession(SQLModel, table=True):
 
 class AuthSession(SQLModel, table=True):
     id: str = Field(default_factory=lambda: gen_id(50), primary_key=True)
+    token: str = Field(default_factory=lambda: gen_otp(6))
+    tries: int = 0
+    max_tries: int = 3
     user_id: str = Field(foreign_key="user.id")
     expires_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=2),
+        default_factory=lambda: datetime.now(timezone.utc)
+        + timedelta(minutes=60),
         sa_column=Column(DateTime(timezone=True)),
     )
     expired: bool = False
+    verified: bool = False
     user: User = Relationship(
         back_populates="auth_sessions",
         sa_relationship_kwargs={"lazy": "selectin"},
     )
+
+
+class AccountVerificationSession(SQLModel, table=True):
+    id: str = Field(default_factory=lambda: gen_id(60), primary_key=True)
+    token: str = Field(default_factory=lambda: gen_id(8))
+    user_id: str = Field(foreign_key="user.id")
+    expires_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=1)
+    )
+    tries: int = 0
+    max_tries: int = 3
+    expired: bool = False
+    user: User = Relationship(back_populates="verification_sessions")
