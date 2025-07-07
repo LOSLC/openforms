@@ -6,6 +6,8 @@ import {
   AnswerSessionDTO,
   ResponseCreationRequest,
   MessageResponse,
+  FormTranslationDTO,
+  SupportedLanguages,
 } from "../api";
 
 export const formsService = {
@@ -16,6 +18,14 @@ export const formsService = {
 
   getFormFields: async (formId: string): Promise<FormFieldDTO[]> => {
     return api.get(`api/v1/forms/${formId}/fields`).json();
+  },
+
+  // Translation
+  translateForm: async (formId: string, language: SupportedLanguages): Promise<FormTranslationDTO> => {
+    return api.post(`api/v1/forms/${formId}/translate`, { 
+      searchParams: { language },
+      timeout: 60000, // 1 minute timeout for translation
+    }).json();
   },
 
   // Response submission

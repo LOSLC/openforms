@@ -3,7 +3,6 @@ from typing import Union
 from jinja2 import Environment, FileSystemLoader
 
 from app.core.config import env
-from app.core.logging.log import log_info
 
 jinja_env = Environment(
     loader=FileSystemLoader(env.get_env("EMAIL_TEMPLATES_PATH"))
@@ -24,5 +23,4 @@ def render_template(
         str: The rendered template as a string.
     """
     template = jinja_env.get_template(f"{name}.html")
-    log_info(template.filename)
     return template.render(context)

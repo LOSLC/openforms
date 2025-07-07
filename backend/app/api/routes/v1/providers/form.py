@@ -6,12 +6,15 @@ from fastapi import HTTPException, Response
 from pydantic import EmailStr, HttpUrl, TypeAdapter, constr
 from sqlmodel import Session, select
 from starlette.status import (
-    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_422_UNPROCESSABLE_ENTITY,
 )
 
-from app.api.routes.v1.dto.form import FormFieldType, ResponseCreationDTO
+from app.api.routes.v1.dto.form import (
+    FormFieldType,
+    FormTranslationModel,
+    ResponseCreationDTO,
+)
 from app.api.routes.v1.dto.message import MessageResponse
 from app.core.db.builders.permission import PermissionBuilder
 from app.core.db.builders.role import RoleBuilder
@@ -22,10 +25,10 @@ from app.core.db.models import (
     FormField,
     User,
 )
+from app.core.logging.log import log_warning
 from app.core.security.checkers import (
     check_conditions,
     check_existence,
-    check_non_existence,
 )
 from app.core.security.permissions import (
     ACTION_READWRITE,
@@ -38,6 +41,7 @@ from app.core.security.permissions import (
     PermissionChecker,
     PermissionCheckModel,
 )
+from app.core.services.ai.translation import SupportedLanguages, translate_json
 
 ANSWER_SESSION_COOKIE_KEY = "response_session_id"
 
@@ -71,6 +75,19 @@ async def create_form(
     db_session.commit()
     db_session.refresh(form)
     return form.to_dto()
+
+
+async def translate_form(
+    db_session: Session, form_id: UUID, language: SupportedLanguages
+):
+    form = check_existence(db_session.get(Form, form_id))
+    form_fields = [form_field.to_dto() for form_field in form.fields]
+    data = FormTranslationModel(form=form.to_dto(), fields=form_fields)
+    translated_form = await translate_json(
+        json_data=data.model_dump_json(), language=language
+    )
+    log_warning(translated_form)
+    return FormTranslationModel.model_validate_json(translated_form)
 
 
 async def add_field_to_form(
@@ -358,21 +375,29 @@ async def submit(
         )
     )
 
-    stmt = (
+    all_required_fields = db_session.exec(
+        select(FormField).where(
+            FormField.required == True,
+            FormField.form_id == answer_session.form_id,
+        )
+    ).all()
+    answered_required_fields = db_session.exec(
         select(FormField)
-        .where(FormField.required == True)
-        .outerjoin(FieldAnswer)
         .where(
-            FieldAnswer.id == None, FieldAnswer.session_id == answer_session.id
+            FormField.required == True,
+            FormField.form_id == answer_session.form_id,
         )
-    )
-    unanswered_fields = db_session.exec(stmt).all()
-    for field in unanswered_fields:
-        check_non_existence(
-            field,
-            detail=f"{field.label} not answered",
-            status_code=HTTP_400_BAD_REQUEST,
+        .join(FieldAnswer)
+        .where(FieldAnswer.session_id == answer_session.id)
+    ).all()
+
+    for form_field in all_required_fields:
+        check_conditions(
+            [form_field in answered_required_fields],
+            detail=f"Field '{form_field.label}' not answered.",
+            status_code=HTTP_422_UNPROCESSABLE_ENTITY,
         )
+
     answer_session.submitted = True
     db_session.add(answer_session)
     db_session.commit()
@@ -425,9 +450,11 @@ async def open_form(
     return MessageResponse(message="Form opened.")
 
 
-async def get_answer_session(db_session: Session, answer_session_id: UUID):
+async def get_answer_session(
+    db_session: Session, answer_session_id: UUID | None
+):
     answer_session = check_existence(
-        db_session.get(AnswerSession, answer_session_id)
+        db_session.get(AnswerSession, check_existence(answer_session_id))
     )
     return answer_session.to_dto()
 

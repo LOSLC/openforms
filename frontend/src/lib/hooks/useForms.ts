@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formsService } from "../services/forms";
 import { adminService } from "../services/admin";
-import { FormCreationRequest, FormFieldCreationRequest } from "../api";
+import { FormCreationRequest, FormFieldCreationRequest, SupportedLanguages } from "../api";
 
 // Admin form management hooks
 export const useGetAllForms = (skip: number = 0, limit: number = 10) => {
@@ -215,5 +215,13 @@ export const useSubmitCurrentSession = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["session"] });
     },
+  });
+};
+
+// Translation hooks
+export const useTranslateForm = () => {
+  return useMutation({
+    mutationFn: ({ formId, language }: { formId: string; language: SupportedLanguages }) =>
+      formsService.translateForm(formId, language),
   });
 };
