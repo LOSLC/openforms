@@ -34,6 +34,7 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.59.0",
     "react-phone-number-input": "^3.4.12",
+    "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1",
     "world-countries": "^5.1.0",
     "zod": "^3.25.67"
