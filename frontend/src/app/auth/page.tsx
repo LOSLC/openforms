@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useLogin, useRegister } from '@/lib/hooks/useAuth';
+import { useCurrentUser, useLogin, useRegister, useSendVerificationEmail } from '@/lib/hooks/useAuth';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -33,10 +34,20 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showVerificationButton, setShowVerificationButton] = useState(false);
+  const [lastLoginEmail, setLastLoginEmail] = useState('');
   const router = useRouter();
+  const { data: user, isLoading, isError } = useCurrentUser();
   
   const loginMutation = useLogin();
   const registerMutation = useRegister();
+  const sendVerificationMutation = useSendVerificationEmail();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.push('/admin');
+    }
+  }, [user, isLoading, router]);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -60,21 +71,60 @@ export default function AuthPage() {
   const onLoginSubmit = async (data: LoginForm) => {
     try {
       await loginMutation.mutateAsync(data);
-      router.push('/admin');
+      setShowVerificationButton(false);
+      // Show success toast for OTP sent
+      toast.success('OTP sent to your email! Please check your inbox.');
+      
+      // Small delay to let user see the toast before redirecting
+      setTimeout(() => {
+        router.push('/auth/login-otp');
+      }, 1000);
     } catch (error) {
       console.error('Login failed:', error);
+      setLastLoginEmail(data.email);
+      setShowVerificationButton(true);
+      toast.error('Login failed. Please check your credentials.');
     }
   };
 
   const onRegisterSubmit = async (data: RegisterForm) => {
     try {
-      await registerMutation.mutateAsync(data);
+      await registerMutation.mutateAsync(data)
+      // Show success message and switch to login
+      toast.success('Registration successful! Please check your email for verification.');
       setIsLogin(true);
       registerForm.reset();
     } catch (error) {
       console.error('Registration failed:', error);
+      toast.error('Registration failed. Please try again.');
     }
   };
+
+  const handleSendVerification = async () => {
+    if (!lastLoginEmail) return;
+    
+    try {
+      await sendVerificationMutation.mutateAsync(lastLoginEmail);
+      toast.success('Verification email sent! Please check your email.');
+      setShowVerificationButton(false);
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      toast.error('Failed to send verification email. Please try again.');
+    }
+  };
+
+  // Show loading until we know the authentication state
+  if (isLoading || (!isLoading && user && !isError)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardContent className="text-center p-6">
+            <p className="text-gray-600">Loading...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -127,10 +177,22 @@ export default function AuthPage() {
                 {loginMutation.isPending ? 'Signing In...' : 'Sign In'}
               </Button>
 
-              {loginMutation.error && (
-                <p className="text-sm text-red-500 text-center">
-                  Login failed. Please check your credentials.
-                </p>
+              {showVerificationButton && (
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSendVerification}
+                    disabled={sendVerificationMutation.isPending}
+                    className="text-xs"
+                  >
+                    {sendVerificationMutation.isPending 
+                      ? 'Sending...' 
+                      : 'Haven\'t verified your account? Send verification email'
+                    }
+                  </Button>
+                </div>
               )}
             </form>
           ) : (
@@ -205,19 +267,17 @@ export default function AuthPage() {
               >
                 {registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
               </Button>
-
-              {registerMutation.error && (
-                <p className="text-sm text-red-500 text-center">
-                  Registration failed. Please try again.
-                </p>
-              )}
             </form>
           )}
 
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setShowVerificationButton(false);
+                setLastLoginEmail('');
+              }}
               className="text-sm text-blue-600 hover:text-blue-500"
             >
               {isLogin 
