@@ -16,4 +16,20 @@ export const authService = {
   getCurrentUser: async (): Promise<User> => {
     return api.get('api/v1/auth/me').json();
   },
+
+  verifyAccount: async (data: { token: string; session_id: string }): Promise<MessageResponse> => {
+    return api.post('api/v1/auth/verify-account', { json: data }).json();
+  },
+
+  verifyLogin: async (data: { token: string; session_id: string }): Promise<MessageResponse> => {
+    return api.post('api/v1/auth/verify-login', { json: data }).json();
+  },
+
+  sendVerificationEmail: async (email: string): Promise<MessageResponse> => {
+    return api.post('api/v1/auth/send-verification', { json: { email } }).json();
+  },
+
+  verifyLoginOtp: async (token: string): Promise<MessageResponse> => {
+    return api.post('api/v1/auth/verify-login-otp', { json: { token } }).json();
+  },
 };
