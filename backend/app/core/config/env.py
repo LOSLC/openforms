@@ -18,6 +18,7 @@ EnvKey = Literal[
     "PG_USER",
     "PG_PASSWORD",
     "PG_DATABASE",
+    "GEMINI_API_KEY",
 ]
 
 
