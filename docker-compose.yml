@@ -32,6 +32,7 @@ services:
       - ALLOW_ADMINS_ONLY=${ALLOW_ADMINS_ONLY}
       - ADMIN_EMAILS=${ADMIN_EMAILS}
       - SUPER_ADMIN_EMAILS=${SUPER_ADMIN_EMAILS}
+      - FRONTEND_URL=${FRONTEND_URL}
   db:
     image: postgres:17
     environment:
