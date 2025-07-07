@@ -12,6 +12,7 @@ from app.api.routes.v1.dto.form import (
     FormFieldCreationDTO,
     FormFieldDTO,
     FormFieldUpdateDTO,
+    FormTranslationModel,
     FormUpdateDTO,
     ResponseCreationDTO,
 )
@@ -23,6 +24,7 @@ from app.api.routes.v1.providers.auth import (
 )
 from app.core.db.models import User
 from app.core.db.setup import create_db_session
+from app.core.services.ai.translation import SupportedLanguages
 
 router = APIRouter(prefix="/forms", tags=["Forms"])
 
@@ -97,6 +99,17 @@ async def get_form(
         db_session=db_session,
         form_id=form_id,
         current_user=current_user,
+    )
+
+
+@router.post("/{form_id}/translate", response_model=FormTranslationModel)
+async def translate_form(
+    db_session: DBSessionDependency,
+    form_id: UUID,
+    language: SupportedLanguages,
+):
+    return await form_provider.translate_form(
+        db_session=db_session, form_id=form_id, language=language
     )
 
 
@@ -306,10 +319,12 @@ async def submit_responses(
     )
 
 
-@router.get("/sessions/{answer_session_id}", response_model=AnswerSessionDTO)
+@router.get("/sessions", response_model=AnswerSessionDTO)
 async def get_answer_session(
-    answer_session_id: UUID,
     db_session: DBSessionDependency,
+    answer_session_id: Annotated[
+        UUID | None, Cookie(alias=ANSWER_SESSION_COOKIE_KEY)
+    ] = None,
 ):
     """Get an answer session (Public endpoint for session management)"""
     return await form_provider.get_answer_session(
