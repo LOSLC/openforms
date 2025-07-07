@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PhoneInput } from '@/components/ui/phone-input';
-import { useGetForm, useGetFormFields, useSubmitResponse, useSubmitCurrentSession } from '@/lib/hooks/useForms';
+import { useGetForm, useGetFormFields, useSubmitResponse, useSubmitCurrentSession, useTranslateForm } from '@/lib/hooks/useForms';
 import { FormHead } from '@/components/FormHead';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import Link from 'next/link';
-import { Loader2, CheckCircle, Home, ArrowLeft } from 'lucide-react';
+import { Loader2, CheckCircle, Home, ArrowLeft, RotateCcw } from 'lucide-react';
+import { SupportedLanguages, FormTranslationDTO } from '@/lib/api';
 
 interface FormResponse {
   [fieldId: string]: string | undefined;
@@ -37,11 +39,87 @@ export default function FormPage() {
   const [responses, setResponses] = useState<FormResponse>({});
   const [submitted, setSubmitted] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [translatedContent, setTranslatedContent] = useState<FormTranslationDTO | null>(null);
+  const [isTranslated, setIsTranslated] = useState(false);
+  const [originalFieldsMap, setOriginalFieldsMap] = useState<Record<string, FormField>>({});
   
   const { data: form, isLoading: formLoading } = useGetForm(formId);
   const { data: fields, isLoading: fieldsLoading } = useGetFormFields(formId);
   const submitResponseMutation = useSubmitResponse();
   const submitSessionMutation = useSubmitCurrentSession();
+  const translateFormMutation = useTranslateForm();
+
+  // Use translated content if available, otherwise use original
+  const currentForm = isTranslated && translatedContent ? translatedContent.form : form;
+  const currentFields = isTranslated && translatedContent ? translatedContent.fields : fields;
+
+  // Store original fields when they're loaded
+  useEffect(() => {
+    if (fields && !isTranslated) {
+      const fieldsMap: Record<string, FormField> = {};
+      fields.forEach(field => {
+        fieldsMap[field.id] = field;
+      });
+      setOriginalFieldsMap(fieldsMap);
+    }
+  }, [fields, isTranslated]);
+
+  const handleTranslate = async (language: SupportedLanguages) => {
+    try {
+      const translated = await translateFormMutation.mutateAsync({ formId, language });
+      setTranslatedContent(translated);
+      setIsTranslated(true);
+    } catch (error) {
+      console.error('Translation failed:', error);
+    }
+  };
+
+  const handleResetTranslation = () => {
+    setIsTranslated(false);
+    setTranslatedContent(null);
+  };
+
+  // Helper function to map translated option back to original value
+  // This ensures that when users select translated options, we store the original values
+  const mapTranslatedToOriginal = (fieldId: string, translatedValue: string): string => {
+    if (!isTranslated || !translatedContent) return translatedValue;
+    
+    const originalField = originalFieldsMap[fieldId];
+    const translatedField = translatedContent.fields.find(f => f.id === fieldId);
+    
+    if (!originalField || !translatedField || !originalField.possible_answers || !translatedField.possible_answers) {
+      return translatedValue;
+    }
+
+    const originalOptions = originalField.possible_answers.split('\\').map(opt => opt.trim());
+    const translatedOptions = translatedField.possible_answers.split('\\').map(opt => opt.trim());
+    
+    const translatedIndex = translatedOptions.indexOf(translatedValue);
+    return translatedIndex >= 0 && translatedIndex < originalOptions.length 
+      ? originalOptions[translatedIndex] 
+      : translatedValue;
+  };
+
+  // Helper function to map original value to translated display
+  // This ensures that stored values are displayed in the translated language
+  const mapOriginalToTranslated = (fieldId: string, originalValue: string): string => {
+    if (!isTranslated || !translatedContent) return originalValue;
+    
+    const originalField = originalFieldsMap[fieldId];
+    const translatedField = translatedContent.fields.find(f => f.id === fieldId);
+    
+    if (!originalField || !translatedField || !originalField.possible_answers || !translatedField.possible_answers) {
+      return originalValue;
+    }
+
+    const originalOptions = originalField.possible_answers.split('\\').map(opt => opt.trim());
+    const translatedOptions = translatedField.possible_answers.split('\\').map(opt => opt.trim());
+    
+    const originalIndex = originalOptions.indexOf(originalValue);
+    return originalIndex >= 0 && originalIndex < translatedOptions.length 
+      ? translatedOptions[originalIndex] 
+      : originalValue;
+  };
 
   const validateField = (field: FormField, value: string): string | null => {
     // Check if required field is empty
@@ -155,11 +233,11 @@ export default function FormPage() {
   };
 
   const validateAllFields = (): boolean => {
-    if (!fields) return false;
+    if (!currentFields) return false;
     
     const errors: Record<string, string> = {};
     
-    fields.forEach(field => {
+    currentFields.forEach(field => {
       const value = responses[field.id] || '';
       const error = validateField(field, value);
       if (error) {
@@ -408,6 +486,8 @@ export default function FormPage() {
 
       case 'Select':
         const options = field.possible_answers?.split('\\') || [];
+        const selectDisplayValue = isTranslated ? mapOriginalToTranslated(field.id, value) : value;
+        
         return (
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
@@ -420,8 +500,12 @@ export default function FormPage() {
               )}
             </div>
             <Select
-              value={value}
-              onValueChange={(newValue) => handleFieldChange(field.id, newValue)}
+              value={selectDisplayValue}
+              onValueChange={(newValue) => {
+                // Map translated value back to original before storing
+                const originalValue = isTranslated ? mapTranslatedToOriginal(field.id, newValue) : newValue;
+                handleFieldChange(field.id, originalValue);
+              }}
             >
               <SelectTrigger className="h-11 text-base">
                 <SelectValue placeholder={`Select ${field.label.toLowerCase()}...`} />
@@ -440,6 +524,10 @@ export default function FormPage() {
       case 'Multiselect':
         const multiOptions = field.possible_answers?.split('\\') || [];
         const selectedValues = value ? value.split(',') : [];
+        // Map original values to translated for display
+        const selectedDisplayValues = isTranslated 
+          ? selectedValues.map(val => mapOriginalToTranslated(field.id, val)) 
+          : selectedValues;
         
         return (
           <div key={field.id} className="space-y-4">
@@ -456,7 +544,7 @@ export default function FormPage() {
               <p className="text-sm font-medium text-gray-600 mb-3">Select all that apply:</p>
               {multiOptions.map((option: string, index: number) => {
                 const optionValue = option.trim();
-                const isSelected = selectedValues.includes(optionValue);
+                const isSelected = selectedDisplayValues.includes(optionValue);
                 
                 return (
                   <div key={index} className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:border-gray-300 transition-colors">
@@ -464,11 +552,14 @@ export default function FormPage() {
                       id={`${field.id}-${index}`}
                       checked={isSelected}
                       onCheckedChange={(checked) => {
+                        // Map translated option back to original value
+                        const originalOptionValue = isTranslated ? mapTranslatedToOriginal(field.id, optionValue) : optionValue;
+                        
                         let newValues;
                         if (checked) {
-                          newValues = [...selectedValues, optionValue];
+                          newValues = [...selectedValues, originalOptionValue];
                         } else {
-                          newValues = selectedValues.filter(v => v !== optionValue);
+                          newValues = selectedValues.filter(v => v !== originalOptionValue);
                         }
                         handleFieldChange(field.id, newValues.join(','));
                       }}
@@ -705,7 +796,7 @@ export default function FormPage() {
   if (formLoading || fieldsLoading) {
     return (
       <>
-        <FormHead form={form || null} />
+        <FormHead form={currentForm || null} />
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
           <div className="text-center">
             <Loader2 className="h-12 w-12 text-blue-600 mx-auto animate-spin" />
@@ -746,7 +837,7 @@ export default function FormPage() {
   if (submitted) {
     return (
       <>
-        <FormHead form={form || null} submitted={true} />
+        <FormHead form={currentForm || null} submitted={true} />
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
           <Card className="w-full max-w-md">
             <CardContent className="text-center py-16">
@@ -772,27 +863,61 @@ export default function FormPage() {
 
   return (
     <>
-      <FormHead form={form || null} />
+      <FormHead form={currentForm || null} />
       <div className="min-h-screen bg-gray-50 py-6 sm:py-12">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <Card className="shadow-lg">
           <CardHeader className="text-center pb-8 pt-8 sm:pt-12 px-6 sm:px-8">
             <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-              {form.label}
+              {currentForm?.label}
             </CardTitle>
-            {form.description && (
+            {currentForm?.description && (
               <CardDescription className="text-base text-gray-600 leading-relaxed max-w-2xl mx-auto">
-                {form.description}
+                {currentForm.description}
               </CardDescription>
             )}
           </CardHeader>
           <CardContent className="px-6 sm:px-8 pb-8 sm:pb-12">
+            {/* Language Translation Section */}
+            <div className="mb-6">
+              {isTranslated ? (
+                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-700 font-medium flex-1">
+                    Form has been translated
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleResetTranslation}
+                    className="h-8"
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                    Show Original
+                  </Button>
+                </div>
+              ) : (
+                <LanguageSelector
+                  onTranslate={handleTranslate}
+                  isTranslating={translateFormMutation.isPending}
+                  disabled={submitted}
+                />
+              )}
+              {translateFormMutation.error && (
+                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">
+                    Translation failed. Please try again later.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-8">
-              {[...fields].sort((a, b) => {
+              {currentFields ? [...currentFields].sort((a, b) => {
                 const posA = a.position ?? 999999;
                 const posB = b.position ?? 999999;
                 return posA - posB;
-              }).map(renderField)}
+              }).map(renderField) : null}
             </div>
             
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 mt-8 border-t border-gray-200">

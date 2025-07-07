@@ -105,3 +105,17 @@ export interface ResponseCreationRequest {
   field_id: string;
   value: string | null;
 }
+
+// Translation types
+export type SupportedLanguages = 
+  | "English" 
+  | "French" 
+  | "Chinese" 
+  | "Japanese" 
+  | "Spanish" 
+  | "German";
+
+export interface FormTranslationDTO {
+  form: FormDTO;
+  fields: FormFieldDTO[];
+}

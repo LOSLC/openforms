@@ -16,8 +16,13 @@ FormFieldType = Literal[
     "Date",
     "URL",
     "Alpha",
-    "Alphanum"
+    "Alphanum",
 ]
+
+
+class FormTranslationModel(BaseModel):
+    form: "FormDTO"
+    fields: List["FormFieldDTO"]
 
 
 class FormCreationDTO(BaseModel):
