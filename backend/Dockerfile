@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.6   # enables BuildKit cache mounts
 
-FROM astral/uv:python3.13-bookworm-slim AS runner
+FROM astral/uv:python3.13-bookworm-slim
 
 
 RUN useradd -m runner
