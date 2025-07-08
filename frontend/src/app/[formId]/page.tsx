@@ -10,8 +10,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { useGetForm, useGetFormFields, useSubmitResponse, useSubmitCurrentSession, useTranslateForm } from '@/lib/hooks/useForms';
+import { useHoverTranslation } from '@/lib/hooks/useHoverTranslation';
 import { FormHead } from '@/components/FormHead';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { TranslatableText } from '@/components/TranslatableText';
 import Link from 'next/link';
 import { Loader2, CheckCircle, Home, ArrowLeft, RotateCcw } from 'lucide-react';
 import { SupportedLanguages, FormTranslationDTO } from '@/lib/api';
@@ -42,6 +44,16 @@ export default function FormPage() {
   const [translatedContent, setTranslatedContent] = useState<FormTranslationDTO | null>(null);
   const [isTranslated, setIsTranslated] = useState(false);
   const [originalFieldsMap, setOriginalFieldsMap] = useState<Record<string, FormField>>({});
+  const [hoverTranslationLanguage, setHoverTranslationLanguage] = useState<SupportedLanguages | null>(null);
+  const [translationMethod, setTranslationMethod] = useState<'hover' | 'full'>('hover');
+  
+  // Initialize hover translation hook
+  const {
+    translateText,
+    clearCache,
+    isEnabled: hoverTranslationEnabled,
+    setIsEnabled: setHoverTranslationEnabled,
+  } = useHoverTranslation();
   
   const { data: form, isLoading: formLoading } = useGetForm(formId);
   const { data: fields, isLoading: fieldsLoading } = useGetFormFields(formId);
@@ -69,6 +81,13 @@ export default function FormPage() {
       const translated = await translateFormMutation.mutateAsync({ formId, language });
       setTranslatedContent(translated);
       setIsTranslated(true);
+      
+      // If hover translation was enabled, disable it when using full form translation
+      if (hoverTranslationEnabled) {
+        setHoverTranslationEnabled(false);
+        setHoverTranslationLanguage(null);
+        clearCache();
+      }
     } catch (error) {
       console.error('Translation failed:', error);
     }
@@ -77,6 +96,48 @@ export default function FormPage() {
   const handleResetTranslation = () => {
     setIsTranslated(false);
     setTranslatedContent(null);
+    setHoverTranslationEnabled(false);
+    setHoverTranslationLanguage(null);
+    clearCache();
+  };
+
+  const handleHoverTranslationToggle = (enabled: boolean, language: SupportedLanguages | null) => {
+    setHoverTranslationEnabled(enabled);
+    setHoverTranslationLanguage(language);
+    
+    if (enabled && language) {
+      // If enabling hover translation, reset full form translation
+      if (isTranslated) {
+        setIsTranslated(false);
+        setTranslatedContent(null);
+      }
+    } else {
+      // Clear cache when disabling
+      clearCache();
+    }
+  };
+
+  const handleTranslationMethodChange = (method: 'hover' | 'full') => {
+    setTranslationMethod(method);
+  };
+
+  // Helper function to wrap text with TranslatableText component
+  const wrapWithTranslation = (text: string, children: React.ReactNode, className?: string) => {
+    if (translationMethod === 'full' || !hoverTranslationEnabled || !hoverTranslationLanguage) {
+      return children;
+    }
+    
+    return (
+      <TranslatableText
+        text={text}
+        onTranslate={translateText}
+        language={hoverTranslationLanguage}
+        isEnabled={hoverTranslationEnabled}
+        className={className}
+      >
+        {children}
+      </TranslatableText>
+    );
   };
 
   // Helper function to map translated option back to original value
@@ -298,11 +359,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Input
@@ -328,11 +391,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <textarea
@@ -359,11 +424,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Input
@@ -407,11 +474,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <div 
@@ -443,7 +512,9 @@ export default function FormPage() {
                     {value === '1' && (
                       <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                     )}
-                    <span id={`${field.id}-yes-label`} className={`text-center font-medium ${value === '1' ? 'text-blue-700' : ''}`}>Yes</span>
+                    <span id={`${field.id}-yes-label`} className={`text-center font-medium ${value === '1' ? 'text-blue-700' : ''}`}>
+                      {wrapWithTranslation('Yes', 'Yes')}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -471,7 +542,9 @@ export default function FormPage() {
                     {value === '0' && (
                       <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                     )}
-                    <span id={`${field.id}-no-label`} className={`text-center font-medium ${value === '0' ? 'text-blue-700' : ''}`}>No</span>
+                    <span id={`${field.id}-no-label`} className={`text-center font-medium ${value === '0' ? 'text-blue-700' : ''}`}>
+                      {wrapWithTranslation('No', 'No')}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -492,11 +565,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Select
@@ -511,11 +586,14 @@ export default function FormPage() {
                 <SelectValue placeholder={`Select ${field.label.toLowerCase()}...`} />
               </SelectTrigger>
               <SelectContent>
-                {options.map((option: string, index: number) => (
-                  <SelectItem key={index} value={option.trim()} className="text-base py-3">
-                    {option.trim()}
-                  </SelectItem>
-                ))}
+                {options.map((option: string, index: number) => {
+                  const optionText = option.trim();
+                  return (
+                    <SelectItem key={index} value={optionText} className="text-base py-3">
+                      {wrapWithTranslation(optionText, optionText)}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -533,11 +611,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-4">
             <div className="space-y-1">
               <Label className="text-sm font-medium text-gray-700">
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <div className="space-y-3 p-4 border border-gray-200 rounded-lg bg-gray-50/50">
@@ -566,7 +646,7 @@ export default function FormPage() {
                       className="h-5 w-5"
                     />
                     <Label htmlFor={`${field.id}-${index}`} className="text-base font-normal cursor-pointer flex-1">
-                      {optionValue}
+                      {wrapWithTranslation(optionValue, optionValue)}
                     </Label>
                   </div>
                 );
@@ -585,11 +665,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Input
@@ -614,11 +696,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <PhoneInput
@@ -641,11 +725,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Input
@@ -670,11 +756,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Input
@@ -698,11 +786,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Input
@@ -729,11 +819,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Input
@@ -761,11 +853,13 @@ export default function FormPage() {
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
               <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-                {field.label}
+                {wrapWithTranslation(field.label, field.label)}
                 {field.required && <span className="text-red-500 ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">{field.description}</p>
+                <p className="text-sm text-gray-500">
+                  {wrapWithTranslation(field.description, field.description)}
+                </p>
               )}
             </div>
             <Input
@@ -869,11 +963,11 @@ export default function FormPage() {
           <Card className="shadow-lg">
           <CardHeader className="text-center pb-8 pt-8 sm:pt-12 px-6 sm:px-8">
             <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-              {currentForm?.label}
+              {currentForm?.label && wrapWithTranslation(currentForm.label, currentForm.label)}
             </CardTitle>
             {currentForm?.description && (
               <CardDescription className="text-base text-gray-600 leading-relaxed max-w-2xl mx-auto">
-                {currentForm.description}
+                {wrapWithTranslation(currentForm.description, currentForm.description)}
               </CardDescription>
             )}
           </CardHeader>
@@ -901,6 +995,10 @@ export default function FormPage() {
                   onTranslate={handleTranslate}
                   isTranslating={translateFormMutation.isPending}
                   disabled={submitted}
+                  onHoverTranslationToggle={handleHoverTranslationToggle}
+                  onTranslationMethodChange={handleTranslationMethodChange}
+                  hoverTranslationEnabled={hoverTranslationEnabled}
+                  translationMethod={translationMethod}
                 />
               )}
               {translateFormMutation.error && (
