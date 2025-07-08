@@ -134,21 +134,23 @@ export function LanguageSelector({
               </Select>
             )}
 
-            <Button
-              size="sm"
-              onClick={handleTranslate}
-              disabled={!selectedLanguage || isTranslating || disabled}
-              className="w-full sm:w-auto h-10 sm:h-8"
-            >
-              {isTranslating ? (
-                <>
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                  Translating...
-                </>
-              ) : (
-                'Translate Form'
-              )}
-            </Button>
+            {!hoverTranslationEnabled && (
+              <Button
+                size="sm"
+                onClick={handleTranslate}
+                disabled={!selectedLanguage || isTranslating || disabled}
+                className="w-full sm:w-auto h-10 sm:h-8"
+              >
+                {isTranslating ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Translating...
+                  </>
+                ) : (
+                  'Translate Form'
+                )}
+              </Button>
+            )}
           </>
         )}
       </div>
