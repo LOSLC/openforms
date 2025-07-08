@@ -25,27 +25,58 @@ export const TranslatableText: React.FC<TranslatableTextProps> = ({
   const [translatedText, setTranslatedText] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
+  const [isTouched, setIsTouched] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const translationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const touchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset translation when language changes or when translation is disabled
   useEffect(() => {
     setTranslatedText(null);
     setShowTranslation(false);
     setIsTranslating(false);
+    setIsTouched(false);
   }, [language, isEnabled]);
 
   const handleMouseEnter = () => {
     if (!isEnabled || !language) return;
     
     setIsHovering(true);
+    startTranslation();
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    hideTranslation();
+  };
+
+  const handleTouchStart = () => {
+    if (!isEnabled || !language) return;
     
+    setIsTouched(true);
+    startTranslation();
+  };
+
+  const handleTouchEnd = () => {
+    // On mobile, show translation for 3 seconds after touch
+    if (touchTimeoutRef.current) {
+      clearTimeout(touchTimeoutRef.current);
+    }
+    
+    touchTimeoutRef.current = setTimeout(() => {
+      setIsTouched(false);
+      hideTranslation();
+    }, 3000);
+  };
+
+  const startTranslation = () => {
     // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
-    // Start translation after 300ms delay
+    // Start translation after 300ms delay (shorter for touch)
+    const delay = isTouched ? 100 : 300;
     timeoutRef.current = setTimeout(async () => {
       if (!translatedText && text.trim() && language) {
         setIsTranslating(true);
@@ -65,12 +96,13 @@ export const TranslatableText: React.FC<TranslatableTextProps> = ({
       } else if (translatedText) {
         setShowTranslation(true);
       }
-    }, 300);
+    }, delay);
   };
 
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-    setShowTranslation(false);
+  const hideTranslation = () => {
+    if (!isTouched) {
+      setShowTranslation(false);
+    }
     
     // Clear timeouts
     if (timeoutRef.current) {
@@ -90,6 +122,9 @@ export const TranslatableText: React.FC<TranslatableTextProps> = ({
       if (translationTimeoutRef.current) {
         clearTimeout(translationTimeoutRef.current);
       }
+      if (touchTimeoutRef.current) {
+        clearTimeout(touchTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -99,9 +134,11 @@ export const TranslatableText: React.FC<TranslatableTextProps> = ({
     <span
       className={`block w-full ${className} ${
         isEnabled && language ? 'transition-colors duration-200' : ''
-      } ${isHovering && isEnabled && language ? 'bg-blue-50 border-b border-blue-300' : ''}`}
+      } ${(isHovering || isTouched) && isEnabled && language ? 'bg-blue-50 border-b border-blue-300' : ''}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
       {isTranslating ? (
         <span className="inline-flex items-center gap-1">

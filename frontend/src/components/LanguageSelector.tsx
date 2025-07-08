@@ -72,13 +72,13 @@ export function LanguageSelector({
         </span>
       </div>
       
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-wrap">
         <Select 
           value={selectedLanguage} 
           onValueChange={handleLanguageChange}
           disabled={disabled || isTranslating}
         >
-          <SelectTrigger className="w-[140px] h-8">
+          <SelectTrigger className="w-full sm:w-[140px] h-10 sm:h-8">
             <SelectValue placeholder="Select language" />
           </SelectTrigger>
           <SelectContent>
@@ -95,15 +95,16 @@ export function LanguageSelector({
 
         {selectedLanguage && (
           <>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Checkbox
                 id="hover-translation"
                 checked={hoverTranslationEnabled}
                 onCheckedChange={handleHoverToggle}
                 disabled={disabled || isTranslating}
+                className="h-4 w-4"
               />
-              <Label htmlFor="hover-translation" className="text-xs text-blue-700">
-                Hover to translate
+              <Label htmlFor="hover-translation" className="text-xs sm:text-xs text-blue-700 flex-1 sm:flex-none">
+                Touch/Hover to translate
               </Label>
             </div>
 
@@ -113,14 +114,14 @@ export function LanguageSelector({
                 onValueChange={(value) => handleMethodChange(value as TranslationMethod)}
                 disabled={disabled || isTranslating}
               >
-                <SelectTrigger className="w-[120px] h-8">
+                <SelectTrigger className="w-full sm:w-[120px] h-10 sm:h-8">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="hover">
                     <div className="flex items-center gap-2">
                       <MousePointer className="h-3 w-3" />
-                      <span>Hover</span>
+                      <span>Touch/Hover</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="full">
@@ -137,7 +138,7 @@ export function LanguageSelector({
               size="sm"
               onClick={handleTranslate}
               disabled={!selectedLanguage || isTranslating || disabled}
-              className="h-8"
+              className="w-full sm:w-auto h-10 sm:h-8"
             >
               {isTranslating ? (
                 <>
