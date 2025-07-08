@@ -41,7 +41,11 @@ from app.core.security.permissions import (
     PermissionChecker,
     PermissionCheckModel,
 )
-from app.core.services.ai.translation import SupportedLanguages, translate_json
+from app.core.services.ai.translation import (
+    SupportedLanguages,
+    translate,
+    translate_json,
+)
 
 ANSWER_SESSION_COOKIE_KEY = "response_session_id"
 
@@ -88,6 +92,8 @@ async def translate_form(
     )
     log_warning(translated_form)
     return FormTranslationModel.model_validate_json(translated_form)
+
+
 
 
 async def add_field_to_form(
