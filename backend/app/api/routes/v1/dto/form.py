@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Literal
 from uuid import UUID
 
@@ -28,11 +29,15 @@ class FormTranslationModel(BaseModel):
 class FormCreationDTO(BaseModel):
     label: str
     description: str | None = None
+    deadline: datetime | None = None
+    submissions_limit: int | None = None
 
 
 class FormUpdateDTO(BaseModel):
     label: str | None = None
     description: str | None = None
+    deadline: datetime | None = None
+    submissions_limit: int | None = None
 
 
 class FormDTO(BaseModel):
@@ -41,6 +46,9 @@ class FormDTO(BaseModel):
     description: str | None
     fields_length: int  # Number of fields
     open: bool
+    submissions_limit: int | None
+    deadline: datetime | None
+    submissions: int
 
 
 class FormFieldCreationDTO(BaseModel):
