@@ -82,6 +82,9 @@ class Form(SQLModel, table=True):
     label: str
     description: str | None = None
     open: bool = False
+    submissions_limit: int | None = None
+    submissions: int = 0
+    deadline: datetime | None = None
     fields: List["FormField"] = Relationship(
         back_populates="form",
         cascade_delete=True,
@@ -104,6 +107,9 @@ class Form(SQLModel, table=True):
             description=self.description,
             fields_length=len(self.fields),
             open=self.open,
+            submissions_limit=self.submissions_limit,
+            deadline=self.deadline,
+            submissions=self.submissions,
         )
 
 

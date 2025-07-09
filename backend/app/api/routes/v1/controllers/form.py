@@ -53,6 +53,8 @@ async def create_form(
         current_user=current_user,
         title=form_data.label,
         description=form_data.description,
+        submissions_limit=form_data.submissions_limit,
+        deadline=form_data.deadline,
     )
 
 
@@ -127,6 +129,8 @@ async def update_form(
         form_id=form_id,
         title=form_data.label,
         description=form_data.description,
+        submissions_limit=form_data.submissions_limit,
+        deadline=form_data.deadline,
     )
 
 
