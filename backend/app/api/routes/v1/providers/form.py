@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from uuid import UUID
 
 import phonenumbers
@@ -43,9 +43,9 @@ from app.core.security.permissions import (
 )
 from app.core.services.ai.translation import (
     SupportedLanguages,
-    translate,
     translate_json,
 )
+from app.utils.date import utc
 
 ANSWER_SESSION_COOKIE_KEY = "response_session_id"
 
@@ -55,6 +55,8 @@ async def create_form(
     current_user: User,
     title: str,
     description: str | None = None,
+    submissions_limit: int | None = None,
+    deadline: datetime | None = None,
 ):
     PermissionChecker(
         db_session=db_session,
@@ -66,7 +68,13 @@ async def create_form(
             )
         ],
     ).check()
-    form = Form(user_id=current_user.id, label=title, description=description)
+    form = Form(
+        user_id=current_user.id,
+        label=title,
+        description=description,
+        submissions_limit=submissions_limit,
+        deadline=deadline,
+    )
     rw_role = RoleBuilder().addUser(current_user).make()
     rw_permission = (
         PermissionBuilder()
@@ -92,8 +100,6 @@ async def translate_form(
     )
     log_warning(translated_form)
     return FormTranslationModel.model_validate_json(translated_form)
-
-
 
 
 async def add_field_to_form(
@@ -174,7 +180,7 @@ async def delete_field(
                 action_names=[ACTION_READWRITE],
             ),
         ],
-    ).check()
+    ).check(either=True)
     db_session.delete(field)
     db_session.commit()
     return MessageResponse(message="Field deleted successfully !")
@@ -279,7 +285,21 @@ async def respond_to_field(
     response_session_id: UUID | None,
 ):
     field = check_existence(db_session.get(FormField, response_data.field_id))
-    check_conditions([field.form.open is True])
+    check_conditions(
+        [
+            field.form.open is True,
+        ]
+    )
+    if field.form.deadline is not None:
+        check_conditions(
+            [utc(field.form.deadline) > datetime.now(timezone.utc)],
+            detail="Deadline reached.",
+        )
+    if field.form.submissions_limit is not None:
+        check_conditions(
+            [field.form.submissions < field.form.submissions_limit],
+            detail="Submissions limit reached.",
+        )
     response_session: AnswerSession
     if response_session_id is not None:
         response_session = check_existence(
@@ -381,6 +401,15 @@ async def submit(
         )
     )
 
+    if answer_session.form.submissions_limit is not None:
+        check_conditions(
+            [
+                answer_session.form.submissions
+                < answer_session.form.submissions_limit
+            ],
+            detail="Submissions limit reached.",
+        )
+
     all_required_fields = db_session.exec(
         select(FormField).where(
             FormField.required == True,
@@ -405,7 +434,8 @@ async def submit(
         )
 
     answer_session.submitted = True
-    db_session.add(answer_session)
+    answer_session.form.submissions += 1
+    db_session.add_all([answer_session, answer_session.form])
     db_session.commit()
     response.delete_cookie(ANSWER_SESSION_COOKIE_KEY)
     return MessageResponse(message="Responses submitted.")
@@ -531,7 +561,14 @@ async def get_form_by_id(
 ):
     """Get a specific form by ID - Public access for form filling"""
     form = check_existence(db_session.get(Form, form_id))
-    if not form.open:
+
+    if not form.open or (
+        (form.deadline is not None and form.deadline < datetime.now())
+        or (
+            form.submissions_limit is not None
+            and form.submissions >= form.submissions_limit
+        )
+    ):
         PermissionChecker(
             db_session=db_session,
             roles=(check_existence(current_user)).roles,
@@ -576,6 +613,8 @@ async def update_form(
     form_id: UUID,
     title: str | None = None,
     description: str | None = None,
+    submissions_limit: int | None = None,
+    deadline: datetime | None = None,
 ):
     """Update form details"""
     PermissionChecker(
@@ -597,6 +636,10 @@ async def update_form(
         form.label = title
     if description is not None:
         form.description = description
+    if submissions_limit is not None:
+        form.submissions_limit = submissions_limit
+    if deadline is not None:
+        form.deadline = deadline
 
     db_session.add(form)
     db_session.commit()
