@@ -28,6 +28,9 @@ export interface FormDTO {
   description: string | null;
   fields_length: number;
   open: boolean;
+  submissions_limit: number | null;
+  deadline: string | null;
+  submissions: number;
 }
 
 export interface FormFieldDTO {
@@ -87,6 +90,8 @@ export interface RegisterRequest {
 export interface FormCreationRequest {
   label: string;
   description?: string;
+  deadline?: string;
+  submissions_limit?: number;
 }
 
 export interface FormFieldCreationRequest {
