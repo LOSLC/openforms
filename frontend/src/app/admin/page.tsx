@@ -27,8 +27,8 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 text-blue-600 mx-auto animate-spin" />
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <Loader2 className="h-12 w-12 text-primary mx-auto animate-spin" />
+          <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -40,18 +40,18 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:h-16 gap-3">
             <div className="flex items-center">
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">
                 LOSL-C Forms Admin
               </h1>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4 w-full sm:w-auto">
-              <span className="text-sm text-gray-700 truncate">
+              <span className="text-sm text-muted-foreground truncate">
                 Welcome, {user.name || user.username}
               </span>
               <Button 
@@ -72,17 +72,17 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {/* Quick Actions */}
         <div className="mb-8">
-          <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+          <h2 className="text-lg font-medium text-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/admin/forms/new" className="block">
               <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                 <CardContent className="flex items-center p-4 sm:p-6">
-                  <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                    <Plus className="text-blue-600 h-4 w-4" />
+                  <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <Plus className="text-primary h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-medium text-sm sm:text-base">Create New Form</h3>
-                    <p className="text-xs sm:text-sm text-gray-600 mt-1">Build a new form from scratch</p>
+                    <h3 className="font-medium text-sm sm:text-base text-foreground">Create New Form</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Build a new form from scratch</p>
                   </div>
                 </CardContent>
               </Card>
@@ -91,12 +91,12 @@ export default function AdminPage() {
             <Link href="/admin/forms" className="block">
               <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                 <CardContent className="flex items-center p-4 sm:p-6">
-                  <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                    <FileText className="text-green-600 h-4 w-4" />
+                  <div className="h-8 w-8 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <FileText className="text-green-600 dark:text-green-500 h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-medium text-sm sm:text-base">Manage Forms</h3>
-                    <p className="text-xs sm:text-sm text-gray-600 mt-1">Edit and organize your forms</p>
+                    <h3 className="font-medium text-sm sm:text-base text-foreground">Manage Forms</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">Edit and organize your forms</p>
                   </div>
                 </CardContent>
               </Card>
@@ -109,7 +109,7 @@ export default function AdminPage() {
         {/* Recent Forms */}
         <div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-            <h2 className="text-lg font-medium text-gray-900">Your Forms</h2>
+            <h2 className="text-lg font-medium text-foreground">Your Forms</h2>
             <Link href="/admin/forms">
               <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 View All
@@ -140,7 +140,7 @@ export default function AdminPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0 flex-1 flex flex-col">
-                    <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
                       <span>{form.fields_length} fields</span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2 mt-auto">
@@ -162,11 +162,11 @@ export default function AdminPage() {
           ) : (
             <Card>
               <CardContent className="text-center py-12">
-                <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileX className="text-gray-400 h-6 w-6" />
+                <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileX className="text-muted-foreground h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No forms yet</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="text-lg font-medium text-foreground mb-2">No forms yet</h3>
+                <p className="text-muted-foreground mb-4">
                   Get started by creating your first form
                 </p>
                 <Link href="/admin/forms/new">

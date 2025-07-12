@@ -15,7 +15,7 @@ import { FormHead } from '@/components/FormHead';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { TranslatableText } from '@/components/TranslatableText';
 import Link from 'next/link';
-import { Loader2, CheckCircle, Home, ArrowLeft, RotateCcw } from 'lucide-react';
+import { Loader2, CheckCircle, Home, RotateCcw } from 'lucide-react';
 import { SupportedLanguages, FormTranslationDTO } from '@/lib/api';
 
 interface FormResponse {
@@ -358,12 +358,12 @@ export default function FormPage() {
         return (
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
-              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
+              <Label htmlFor={field.id} className="text-sm font-medium text-foreground" id={`${field.id}-label`}>
                 {wrapWithTranslation(field.label, field.label)}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
+                {field.required && <span className="text-destructive ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {wrapWithTranslation(field.description, field.description)}
                 </p>
               )}
@@ -374,12 +374,12 @@ export default function FormPage() {
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
               placeholder={`Enter ${field.label.toLowerCase()}...`}
               required={field.required}
-              className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+              className={`h-11 text-base ${validationErrors[field.id] ? 'border-destructive focus:border-destructive' : ''}`}
               aria-describedby={field.description ? `${field.id}-desc` : undefined}
               maxLength={field.text_bounds ? Number(field.text_bounds.split(':')[1]) || undefined : undefined}
             />
             {validationErrors[field.id] && (
-              <p className="text-sm text-red-600 flex items-center gap-1">
+              <p className="text-sm text-destructive flex items-center gap-1">
                 <span>⚠</span> {validationErrors[field.id]}
               </p>
             )}
@@ -390,12 +390,12 @@ export default function FormPage() {
         return (
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
-              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
+              <Label htmlFor={field.id} className="text-sm font-medium text-foreground" id={`${field.id}-label`}>
                 {wrapWithTranslation(field.label, field.label)}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
+                {field.required && <span className="text-destructive ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {wrapWithTranslation(field.description, field.description)}
                 </p>
               )}
@@ -407,12 +407,12 @@ export default function FormPage() {
               placeholder={`Enter ${field.label.toLowerCase()}...`}
               required={field.required}
               rows={4}
-              className={`w-full px-3 py-2 border rounded-md shadow-sm text-base resize-y min-h-[100px] ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm text-base resize-y min-h-[100px] bg-background text-foreground placeholder:text-muted-foreground ${validationErrors[field.id] ? 'border-destructive focus:border-destructive' : 'border-border focus:border-ring focus:ring-ring'}`}
               aria-describedby={field.description ? `${field.id}-desc` : undefined}
               maxLength={field.text_bounds ? Number(field.text_bounds.split(':')[1]) || undefined : undefined}
             />
             {validationErrors[field.id] && (
-              <p className="text-sm text-red-600 flex items-center gap-1">
+              <p className="text-sm text-destructive flex items-center gap-1">
                 <span>⚠</span> {validationErrors[field.id]}
               </p>
             )}
@@ -423,12 +423,12 @@ export default function FormPage() {
         return (
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
-              <Label htmlFor={field.id} className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
+              <Label htmlFor={field.id} className="text-sm font-medium text-foreground" id={`${field.id}-label`}>
                 {wrapWithTranslation(field.label, field.label)}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
+                {field.required && <span className="text-destructive ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {wrapWithTranslation(field.description, field.description)}
                 </p>
               )}
@@ -458,11 +458,11 @@ export default function FormPage() {
               min={field.number_bounds?.split(':')[0]}
               max={field.number_bounds?.split(':')[1]}
               step="any"
-              className={`h-11 text-base ${validationErrors[field.id] ? 'border-red-500 focus:border-red-500' : ''}`}
+              className={`h-11 text-base ${validationErrors[field.id] ? 'border-destructive focus:border-destructive' : ''}`}
               aria-describedby={field.description ? `${field.id}-desc` : undefined}
             />
             {validationErrors[field.id] && (
-              <p className="text-sm text-red-600 flex items-center gap-1">
+              <p className="text-sm text-destructive flex items-center gap-1">
                 <span>⚠</span> {validationErrors[field.id]}
               </p>
             )}
@@ -473,12 +473,12 @@ export default function FormPage() {
         return (
           <div key={field.id} className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700" id={`${field.id}-label`}>
+              <Label className="text-sm font-medium text-foreground" id={`${field.id}-label`}>
                 {wrapWithTranslation(field.label, field.label)}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
+                {field.required && <span className="text-destructive ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {wrapWithTranslation(field.description, field.description)}
                 </p>
               )}
@@ -494,10 +494,10 @@ export default function FormPage() {
                 aria-checked={value === '1'}
                 tabIndex={0}
                 aria-labelledby={`${field.id}-yes-label`}
-                className={`p-4 border rounded-lg hover:bg-gray-50 transition-all cursor-pointer ${
+                className={`p-4 border rounded-lg hover:bg-accent/50 transition-all cursor-pointer ${
                   value === '1' 
-                    ? 'border-blue-500 bg-blue-50/50 shadow-sm' 
-                    : validationErrors[field.id] ? 'border-red-200' : 'border-gray-200'
+                    ? 'border-primary bg-primary/10 shadow-sm' 
+                    : validationErrors[field.id] ? 'border-destructive/50' : 'border-border'
                 }`}
                 onClick={() => handleFieldChange(field.id, '1')}
                 onKeyDown={(e) => {
@@ -510,9 +510,9 @@ export default function FormPage() {
                 <div className="flex items-center justify-center h-full">
                   <div className="flex items-center space-x-2">
                     {value === '1' && (
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-primary"></div>
                     )}
-                    <span id={`${field.id}-yes-label`} className={`text-center font-medium ${value === '1' ? 'text-blue-700' : ''}`}>
+                    <span id={`${field.id}-yes-label`} className={`text-center font-medium ${value === '1' ? 'text-primary' : 'text-foreground'}`}>
                       {wrapWithTranslation('Yes', 'Yes')}
                     </span>
                   </div>
@@ -524,10 +524,10 @@ export default function FormPage() {
                 aria-checked={value === '0'}
                 tabIndex={0}
                 aria-labelledby={`${field.id}-no-label`}
-                className={`p-4 border rounded-lg hover:bg-gray-50 transition-all cursor-pointer ${
+                className={`p-4 border rounded-lg hover:bg-accent/50 transition-all cursor-pointer ${
                   value === '0' 
-                    ? 'border-blue-500 bg-blue-50/50 shadow-sm' 
-                    : validationErrors[field.id] ? 'border-red-200' : 'border-gray-200'
+                    ? 'border-primary bg-primary/10 shadow-sm' 
+                    : validationErrors[field.id] ? 'border-destructive/50' : 'border-border'
                 }`}
                 onClick={() => handleFieldChange(field.id, '0')}
                 onKeyDown={(e) => {
@@ -540,9 +540,9 @@ export default function FormPage() {
                 <div className="flex items-center justify-center h-full">
                   <div className="flex items-center space-x-2">
                     {value === '0' && (
-                      <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      <div className="w-3 h-3 rounded-full bg-primary"></div>
                     )}
-                    <span id={`${field.id}-no-label`} className={`text-center font-medium ${value === '0' ? 'text-blue-700' : ''}`}>
+                    <span id={`${field.id}-no-label`} className={`text-center font-medium ${value === '0' ? 'text-primary' : 'text-foreground'}`}>
                       {wrapWithTranslation('No', 'No')}
                     </span>
                   </div>
@@ -550,7 +550,7 @@ export default function FormPage() {
               </div>
             </div>
             {validationErrors[field.id] && (
-              <p className="text-sm text-red-600 flex items-center gap-1">
+              <p className="text-sm text-destructive flex items-center gap-1">
                 <span>⚠</span> {validationErrors[field.id]}
               </p>
             )}
@@ -610,24 +610,24 @@ export default function FormPage() {
         return (
           <div key={field.id} className="space-y-4">
             <div className="space-y-1">
-              <Label className="text-sm font-medium text-gray-700">
+              <Label className="text-sm font-medium text-foreground">
                 {wrapWithTranslation(field.label, field.label)}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
+                {field.required && <span className="text-destructive ml-1">*</span>}
               </Label>
               {field.description && (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-muted-foreground">
                   {wrapWithTranslation(field.description, field.description)}
                 </p>
               )}
             </div>
-            <div className="space-y-3 p-4 border border-gray-200 rounded-lg bg-gray-50/50">
-              <p className="text-sm font-medium text-gray-600 mb-3">Select all that apply:</p>
+            <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/30">
+              <p className="text-sm font-medium text-foreground mb-3">Select all that apply:</p>
               {multiOptions.map((option: string, index: number) => {
                 const optionValue = option.trim();
                 const isSelected = selectedDisplayValues.includes(optionValue);
                 
                 return (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-white border border-gray-200 rounded-md hover:border-gray-300 transition-colors">
+                  <div key={index} className="flex items-center space-x-3 p-3 bg-card border border-border rounded-md hover:border-border/80 transition-colors">
                     <Checkbox
                       id={`${field.id}-${index}`}
                       checked={isSelected}
@@ -645,7 +645,7 @@ export default function FormPage() {
                       }}
                       className="h-5 w-5"
                     />
-                    <Label htmlFor={`${field.id}-${index}`} className="text-base font-normal cursor-pointer flex-1">
+                    <Label htmlFor={`${field.id}-${index}`} className="text-base font-normal cursor-pointer flex-1 text-foreground">
                       {wrapWithTranslation(optionValue, optionValue)}
                     </Label>
                   </div>
@@ -891,10 +891,10 @@ export default function FormPage() {
     return (
       <>
         <FormHead form={currentForm || null} />
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
           <div className="text-center">
-            <Loader2 className="h-12 w-12 text-blue-600 mx-auto animate-spin" />
-            <p className="mt-4 text-gray-600">Loading form...</p>
+            <Loader2 className="h-12 w-12 text-primary mx-auto animate-spin" />
+            <p className="mt-4 text-muted-foreground">Loading form...</p>
           </div>
         </div>
       </>
@@ -905,14 +905,14 @@ export default function FormPage() {
     return (
       <>
         <FormHead form={null} />
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
           <Card className="w-full max-w-md">
             <CardContent className="text-center py-12">
-              <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-red-600 text-xl">!</span>
+              <div className="h-12 w-12 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-destructive text-xl">!</span>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Form not found</h3>
-              <p className="text-gray-600 mb-6">
+              <h3 className="text-lg font-medium text-foreground mb-2">Form not found</h3>
+              <p className="text-muted-foreground mb-6">
                 The form you&apos;re looking for doesn&apos;t exist or has been removed.
               </p>
               <Link href="/">
@@ -932,22 +932,16 @@ export default function FormPage() {
     return (
       <>
         <FormHead form={currentForm || null} submitted={true} />
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
           <Card className="w-full max-w-md">
             <CardContent className="text-center py-16">
-              <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="text-green-600 h-8 w-8" />
+              <div className="h-16 w-16 bg-green-100 dark:bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle className="text-green-600 dark:text-green-500 h-8 w-8" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">Thank you!</h3>
-              <p className="text-gray-600 mb-8 leading-relaxed">
+              <h3 className="text-xl font-semibold text-foreground mb-3">Thank you!</h3>
+              <p className="text-muted-foreground leading-relaxed">
                 Your response has been submitted successfully. We appreciate your participation.
               </p>
-              <Link href="/">
-                <Button className="w-full h-11">
-                  <Home className="h-4 w-4 mr-2" />
-                  Back to Home
-                </Button>
-              </Link>
             </CardContent>
           </Card>
         </div>
@@ -958,26 +952,26 @@ export default function FormPage() {
   return (
     <>
       <FormHead form={currentForm || null} />
-      <div className="min-h-screen bg-gray-50 py-6 sm:py-12">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="shadow-lg">
-          <CardHeader className="text-center pb-8 pt-8 sm:pt-12 px-6 sm:px-8">
-            <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+      <div className="min-h-screen bg-background py-4 sm:py-8 lg:py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="shadow-lg border-border">
+          <CardHeader className="text-center pb-6 pt-6 sm:pb-8 sm:pt-8 lg:pt-12 px-4 sm:px-6 lg:px-8">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-3 leading-tight">
               {currentForm?.label && wrapWithTranslation(currentForm.label, currentForm.label)}
             </CardTitle>
             {currentForm?.description && (
-              <CardDescription className="text-base text-gray-600 leading-relaxed max-w-2xl mx-auto">
+              <CardDescription className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
                 {wrapWithTranslation(currentForm.description, currentForm.description)}
               </CardDescription>
             )}
           </CardHeader>
-          <CardContent className="px-6 sm:px-8 pb-8 sm:pb-12">
+          <CardContent className="px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 lg:pb-12">
             {/* Language Translation Section */}
             <div className="mb-6">
               {isTranslated ? (
-                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-700 font-medium flex-1">
+                <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-500" />
+                  <span className="text-sm text-green-700 dark:text-green-400 font-medium flex-1">
                     Form has been translated
                   </span>
                   <Button
@@ -1018,14 +1012,7 @@ export default function FormPage() {
               }).map(renderField) : null}
             </div>
             
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 mt-8 border-t border-gray-200">
-              <Link href="/" className="w-full sm:w-auto">
-                <Button variant="outline" className="w-full sm:w-auto h-11 px-6">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-              </Link>
-              
+            <div className="flex justify-end items-center gap-4 pt-8 mt-8 border-t border-border">
               <Button 
                 onClick={handleSubmit}
                 disabled={submitSessionMutation.isPending}
@@ -1043,8 +1030,8 @@ export default function FormPage() {
             </div>
             
             {submitSessionMutation.error && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600 text-center">
+              <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm text-destructive text-center">
                   Failed to submit form. Please check your responses and try again.
                 </p>
               </div>
