@@ -410,6 +410,8 @@ export default function EditFormPage() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [submissionsLimit, setSubmissionsLimit] = useState<number | ''>('');
   const [showNewField, setShowNewField] = useState(false);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [fieldForm, setFieldForm] = useState<FieldFormData>({
@@ -451,6 +453,8 @@ export default function EditFormPage() {
     if (form) {
       setTitle(form.label);
       setDescription(form.description || '');
+      setDeadline(form.deadline ? form.deadline.split('T')[0] : ''); // Convert ISO date to YYYY-MM-DD
+      setSubmissionsLimit(form.submissions_limit || '');
     }
   }, [form]);
 
@@ -587,6 +591,8 @@ export default function EditFormPage() {
         data: {
           label: title.trim(),
           description: description.trim() || undefined,
+          deadline: deadline ? `${deadline}T00:00:00Z` : undefined, // Convert to ISO format
+          submissions_limit: submissionsLimit !== '' ? Number(submissionsLimit) : undefined,
         },
       });
     } catch (error) {
@@ -945,6 +951,38 @@ export default function EditFormPage() {
                 <p id="desc-description" className="text-xs text-muted-foreground">
                   Provide additional context or instructions for your form
                 </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="deadline" className="text-sm font-medium">Deadline</Label>
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                    className="h-11 focus:ring-2 focus:ring-blue-200 focus:border-blue-300"
+                    aria-describedby="deadline-description"
+                  />
+                  <p id="deadline-description" className="text-xs text-gray-500">
+                    Set a deadline for form submissions (optional)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="submissions-limit" className="text-sm font-medium">Submissions Limit</Label>
+                  <Input
+                    id="submissions-limit"
+                    type="number"
+                    min="1"
+                    value={submissionsLimit}
+                    onChange={(e) => setSubmissionsLimit(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="h-11 focus:ring-2 focus:ring-blue-200 focus:border-blue-300"
+                    placeholder="Unlimited"
+                    aria-describedby="submissions-limit-description"
+                  />
+                  <p id="submissions-limit-description" className="text-xs text-gray-500">
+                    Maximum number of submissions allowed (optional)
+                  </p>
+                </div>
               </div>
               <div className="pt-2">
                 <Button 
