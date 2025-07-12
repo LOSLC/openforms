@@ -37,9 +37,9 @@ export default function NewFormPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="shadow-sm border-b border-b-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center py-4 sm:h-16 gap-3 sm:gap-4">
             <Link href="/admin/forms">
@@ -47,7 +47,7 @@ export default function NewFormPage() {
                 ← Back to Forms
               </Button>
             </Link>
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+            <h1 className="text-lg sm:text-xl font-semibold">
               Create New Form
             </h1>
           </div>
@@ -78,7 +78,7 @@ export default function NewFormPage() {
                   maxLength={100}
                   className="mt-1"
                 />
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                <p className="text-xs text-muted-foreground sm:text-sm mt-1">
                   {title.length}/100 characters
                 </p>
               </div>
@@ -96,7 +96,7 @@ export default function NewFormPage() {
                   maxLength={500}
                   className="mt-1"
                 />
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                   {description.length}/500 characters
                 </p>
               </div>
@@ -129,12 +129,12 @@ export default function NewFormPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{title}</h2>
+              <div className="border-2 border-dashed rounded-lg p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-bold mb-2">{title}</h2>
                 {description && (
-                  <p className="text-gray-600 mb-4 text-sm sm:text-base">{description}</p>
+                  <p className="mb-4 text-sm sm:text-base">{description}</p>
                 )}
-                <p className="text-xs sm:text-sm text-gray-500 italic">
+                <p className="text-xs sm:text-sm italic">
                   Form fields will appear here after you add them
                 </p>
               </div>
