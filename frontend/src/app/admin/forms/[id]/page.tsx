@@ -114,9 +114,9 @@ function SortableField({
     <Card 
       ref={setNodeRef} 
       style={style} 
-      className={`border hover:border-blue-200 hover:shadow-sm transition-all duration-200 ${
+      className={`border hover:border-primary/30 hover:shadow-sm transition-all duration-200 ${
         isDragging 
-          ? 'shadow-lg bg-white/95 backdrop-blur-sm focus:outline-none focus:ring-0 focus-within:ring-0 border-transparent' 
+          ? 'shadow-lg bg-background/95 backdrop-blur-sm focus:outline-none focus:ring-0 focus-within:ring-0 border-transparent' 
           : 'shadow-sm'
       }`}
     >
@@ -187,7 +187,7 @@ function SortableField({
                         variant="outline"
                         size="sm"
                         onClick={() => removeOption(index)}
-                        className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 w-full sm:w-auto h-8 px-2 text-xs bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 text-white"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10 w-full sm:w-auto h-8 px-2 text-xs"
                       >
                         Remove
                       </Button>
@@ -203,7 +203,7 @@ function SortableField({
                     + Add Option
                   </Button>
                   {(!fieldForm.options || fieldForm.options.length === 0) && (
-                    <p className="text-xs text-gray-500">Click &quot;Add Option&quot; to create choices for this field.</p>
+                    <p className="text-xs text-muted-foreground">Click &quot;Add Option&quot; to create choices for this field.</p>
                   )}
                 </div>
               </div>
@@ -308,7 +308,7 @@ function SortableField({
               <div 
                 {...attributes} 
                 {...listeners}
-                className={`flex items-center justify-center w-5 h-5 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing mt-0.5 ${
+                className={`flex items-center justify-center w-5 h-5 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing mt-0.5 ${
                   isDragging ? 'focus:outline-none focus:ring-0' : ''
                 }`}
                 aria-label="Drag to reorder field"
@@ -317,53 +317,53 @@ function SortableField({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                  <h4 className="font-semibold text-sm sm:text-base text-gray-800 truncate">{field.label}</h4>
+                  <h4 className="font-semibold text-sm sm:text-base text-foreground truncate">{field.label}</h4>
                   <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${
-                    field.field_type === 'Text' ? 'bg-blue-100 text-blue-800' : 
-                    field.field_type === 'LongText' ? 'bg-slate-100 text-slate-800' :
-                    field.field_type === 'Numerical' ? 'bg-green-100 text-green-800' :
-                    field.field_type === 'Boolean' ? 'bg-purple-100 text-purple-800' :
-                    field.field_type === 'Select' ? 'bg-amber-100 text-amber-800' :
-                    field.field_type === 'Multiselect' ? 'bg-pink-100 text-pink-800' :
-                    field.field_type === 'Email' ? 'bg-cyan-100 text-cyan-800' :
-                    field.field_type === 'Phone' ? 'bg-indigo-100 text-indigo-800' :
-                    field.field_type === 'Currency' ? 'bg-emerald-100 text-emerald-800' :
-                    field.field_type === 'Date' ? 'bg-violet-100 text-violet-800' :
-                    field.field_type === 'URL' ? 'bg-sky-100 text-sky-800' :
-                    field.field_type === 'Alpha' ? 'bg-orange-100 text-orange-800' :
-                    field.field_type === 'Alphanum' ? 'bg-teal-100 text-teal-800' :
-                    'bg-gray-100 text-gray-800'}`}
+                    field.field_type === 'Text' ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/10 dark:text-blue-400' : 
+                    field.field_type === 'LongText' ? 'bg-slate-100 text-slate-800 dark:bg-slate-500/10 dark:text-slate-400' :
+                    field.field_type === 'Numerical' ? 'bg-green-100 text-green-800 dark:bg-green-500/10 dark:text-green-400' :
+                    field.field_type === 'Boolean' ? 'bg-purple-100 text-purple-800 dark:bg-purple-500/10 dark:text-purple-400' :
+                    field.field_type === 'Select' ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400' :
+                    field.field_type === 'Multiselect' ? 'bg-pink-100 text-pink-800 dark:bg-pink-500/10 dark:text-pink-400' :
+                    field.field_type === 'Email' ? 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/10 dark:text-cyan-400' :
+                    field.field_type === 'Phone' ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-400' :
+                    field.field_type === 'Currency' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                    field.field_type === 'Date' ? 'bg-violet-100 text-violet-800 dark:bg-violet-500/10 dark:text-violet-400' :
+                    field.field_type === 'URL' ? 'bg-sky-100 text-sky-800 dark:bg-sky-500/10 dark:text-sky-400' :
+                    field.field_type === 'Alpha' ? 'bg-orange-100 text-orange-800 dark:bg-orange-500/10 dark:text-orange-400' :
+                    field.field_type === 'Alphanum' ? 'bg-teal-100 text-teal-800 dark:bg-teal-500/10 dark:text-teal-400' :
+                    'bg-muted text-muted-foreground'}`}
                   >
                     {field.field_type}
                   </span>
                   <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0 ${
-                    field.required ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-800'}`}
+                    field.required ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400' : 'bg-muted text-muted-foreground'}`}
                   >
                     {field.required ? 'Required' : 'Optional'}
                   </span>
                 </div>
                 
                 {field.description && (
-                  <p className="text-xs text-gray-600 mb-2">{field.description}</p>
+                  <p className="text-xs text-muted-foreground mb-2">{field.description}</p>
                 )}
                 
                 <div className="flex flex-col gap-1.5 text-xs">
                   {field.possible_answers && (
-                    <div className="px-2 py-1 bg-gray-100 rounded text-xs break-words">
-                      <span className="font-medium text-gray-700">Options:</span>{' '}
-                      <span className="text-gray-600">{field.possible_answers}</span>
+                    <div className="px-2 py-1 bg-muted rounded text-xs break-words">
+                      <span className="font-medium text-foreground">Options:</span>{' '}
+                      <span className="text-muted-foreground">{field.possible_answers}</span>
                     </div>
                   )}
                   {field.text_bounds && (field.field_type === 'Text' || field.field_type === 'LongText') && (
-                    <div className="px-2 py-1 bg-blue-50 rounded text-xs">
-                      <span className="font-medium text-blue-700">Length:</span>{' '}
-                      <span className="text-blue-600">{field.text_bounds.replace(':', ' to ')} chars</span>
+                    <div className="px-2 py-1 bg-blue-50 dark:bg-blue-500/10 rounded text-xs">
+                      <span className="font-medium text-blue-700 dark:text-blue-400">Length:</span>{' '}
+                      <span className="text-blue-600 dark:text-blue-300">{field.text_bounds.replace(':', ' to ')} chars</span>
                     </div>
                   )}
                   {field.number_bounds && field.field_type === 'Numerical' && (
-                    <div className="px-2 py-1 bg-green-50 rounded text-xs">
-                      <span className="font-medium text-green-700">Range:</span>{' '}
-                      <span className="text-green-600">{field.number_bounds.replace(':', ' to ')}</span>
+                    <div className="px-2 py-1 bg-green-50 dark:bg-green-500/10 rounded text-xs">
+                      <span className="font-medium text-green-700 dark:text-green-400">Range:</span>{' '}
+                      <span className="text-green-600 dark:text-green-300">{field.number_bounds.replace(':', ' to ')}</span>
                     </div>
                   )}
                 </div>
@@ -387,7 +387,7 @@ function SortableField({
                 size="sm"
                 onClick={() => onDeleteField(field.id)}
                 disabled={deleteFieldMutation.isPending}
-                className={`h-7 px-2 flex-1 lg:flex-none lg:w-16 text-xs bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 text-white ${
+                className={`h-7 px-2 flex-1 lg:flex-none lg:w-16 text-xs ${
                   isDragging ? 'focus:outline-none focus:ring-0' : ''
                 }`}
                 aria-label={`Delete ${field.label} field`}
@@ -662,7 +662,10 @@ export default function EditFormPage() {
     try {
       await createFieldMutation.mutateAsync({
         formId,
-        data: prepareFieldData(fieldForm),
+        data: {
+          ...prepareFieldData(fieldForm),
+          position: sortedFields.length, // Add position automatically
+        },
       });
       setFieldForm({
         label: '',
@@ -773,14 +776,14 @@ export default function EditFormPage() {
 
   if (formLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md w-full">
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="text-center p-8 bg-card rounded-lg shadow-md max-w-md w-full">
           <div className="relative h-16 w-16 mx-auto mb-4">
-            <Loader2 className="h-16 w-16 text-blue-600 animate-spin absolute" />
-            <div className="h-16 w-16 rounded-full bg-blue-100 opacity-50"></div>
+            <Loader2 className="h-16 w-16 text-primary animate-spin absolute" />
+            <div className="h-16 w-16 rounded-full bg-primary/10 opacity-50"></div>
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Loading Form</h2>
-          <p className="text-gray-600">Please wait while we fetch your form data...</p>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Loading Form</h2>
+          <p className="text-muted-foreground">Please wait while we fetch your form data...</p>
         </div>
       </div>
     );
@@ -788,13 +791,13 @@ export default function EditFormPage() {
 
   if (!form) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="text-center p-8 bg-white rounded-lg shadow-md max-w-md w-full">
-          <div className="h-16 w-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <XCircle className="h-8 w-8 text-amber-600" />
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="text-center p-8 bg-card rounded-lg shadow-md max-w-md w-full">
+          <div className="h-16 w-16 bg-amber-100 dark:bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <XCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Form Not Found</h1>
-          <p className="text-gray-600 mb-6">The form you&apos;re looking for doesn&apos;t exist or has been deleted.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-3">Form Not Found</h1>
+          <p className="text-muted-foreground mb-6">The form you&apos;re looking for doesn&apos;t exist or has been deleted.</p>
           <Link href="/admin/forms">
             <Button className="px-6 h-11">
               Back to Forms
@@ -806,9 +809,9 @@ export default function EditFormPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
+      <header className="bg-card shadow-sm border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center py-4 md:h-20 gap-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
@@ -818,12 +821,12 @@ export default function EditFormPage() {
                 </Button>
               </Link>
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold text-gray-900 truncate max-w-md">
+                <h1 className="text-xl font-bold text-foreground truncate max-w-md">
                   {form.label}
                 </h1>                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                   form.open 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-amber-100 text-amber-800'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-500/10 dark:text-green-400' 
+                    : 'bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400'
                 }`}>
                   {form.open ? (
                     <>
@@ -851,7 +854,7 @@ export default function EditFormPage() {
                   size="sm"
                   onClick={handleCloseForm}
                   disabled={closeFormMutation.isPending}
-                  className="text-orange-600 hover:text-orange-700 border-orange-600 hover:border-orange-700 w-full sm:w-auto"
+                  className="text-orange-600 hover:text-orange-700 border-orange-600 hover:border-orange-700 dark:text-orange-400 dark:hover:text-orange-300 dark:border-orange-400 dark:hover:border-orange-300 w-full sm:w-auto"
                 >
                   {closeFormMutation.isPending ? (
                     <>
@@ -868,7 +871,7 @@ export default function EditFormPage() {
                   size="sm"
                   onClick={handleOpenForm}
                   disabled={openFormMutation.isPending}
-                  className="text-green-600 hover:text-green-700 border-green-600 hover:border-green-700 w-full sm:w-auto"
+                  className="text-green-600 hover:text-green-700 border-green-600 hover:border-green-700 dark:text-green-400 dark:hover:text-green-300 dark:border-green-400 dark:hover:border-green-300 w-full sm:w-auto"
                 >
                   {openFormMutation.isPending ? (
                     <>
@@ -885,7 +888,7 @@ export default function EditFormPage() {
                 size="sm"
                 onClick={handleDeleteForm}
                 disabled={deleteFormMutation.isPending}
-                className="w-full sm:w-auto bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 text-white"
+                className="w-full sm:w-auto"
               >
                 {deleteFormMutation.isPending ? (
                   <>
@@ -906,8 +909,8 @@ export default function EditFormPage() {
         {/* Form Details */}
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="pb-6">
-            <CardTitle className="text-xl text-gray-800">Form Details</CardTitle>
-            <CardDescription className="text-base text-gray-600">
+            <CardTitle className="text-xl text-foreground">Form Details</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">
               Update the basic information about your form
             </CardDescription>
           </CardHeader>
@@ -924,7 +927,7 @@ export default function EditFormPage() {
                   placeholder="Enter form title"
                   aria-describedby="title-description"
                 />
-                <p id="title-description" className="text-xs text-gray-500">
+                <p id="title-description" className="text-xs text-muted-foreground">
                   This will be displayed as the main heading of your form
                 </p>
               </div>
@@ -939,7 +942,7 @@ export default function EditFormPage() {
                   placeholder="Enter form description (optional)"
                   aria-describedby="desc-description"
                 />
-                <p id="desc-description" className="text-xs text-gray-500">
+                <p id="desc-description" className="text-xs text-muted-foreground">
                   Provide additional context or instructions for your form
                 </p>
               </div>
@@ -968,8 +971,8 @@ export default function EditFormPage() {
           <CardHeader className="pb-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <CardTitle className="text-xl text-gray-800">Form Fields</CardTitle>
-                <CardDescription className="text-base text-gray-600 mt-1">
+                <CardTitle className="text-xl text-foreground">Form Fields</CardTitle>
+                <CardDescription className="text-base text-muted-foreground mt-1">
                   Add and manage the fields in your form
                 </CardDescription>
               </div>
@@ -989,11 +992,11 @@ export default function EditFormPage() {
           <CardContent className="space-y-6">
             {/* New Field Form */}
             {showNewField && (
-              <Card className="border-dashed border-2 border-blue-200 bg-blue-50/30">
+              <Card className="border-dashed border-2 border-primary/30 bg-primary/5">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg text-blue-700 flex items-center">
-                    <span className="bg-blue-100 p-1 rounded-full mr-2">
-                      <Plus className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="text-lg text-primary flex items-center">
+                    <span className="bg-primary/10 p-1 rounded-full mr-2">
+                      <Plus className="h-5 w-5 text-primary" />
                     </span>
                     Add New Field
                   </CardTitle>
@@ -1012,7 +1015,7 @@ export default function EditFormPage() {
                           placeholder="Enter field label"
                           aria-describedby="label-description"
                         />
-                        <p id="label-description" className="text-xs text-gray-500">
+                        <p id="label-description" className="text-xs text-muted-foreground">
                           The main text displayed above the field
                         </p>
                       </div>
@@ -1042,7 +1045,7 @@ export default function EditFormPage() {
                             <SelectItem value="Alphanum">Alphanumeric</SelectItem>
                           </SelectContent>
                         </Select>
-                        <p id="type-description" className="text-xs text-gray-500">
+                        <p id="type-description" className="text-xs text-muted-foreground">
                           Determines the input format and validation
                         </p>
                       </div>
@@ -1058,23 +1061,23 @@ export default function EditFormPage() {
                         placeholder="Enter field description (optional)"
                         aria-describedby="description-help"
                       />
-                      <p id="description-help" className="text-xs text-gray-500">
+                      <p id="description-help" className="text-xs text-muted-foreground">
                         Additional information shown below the field label
                       </p>
                     </div>
 
-                    {(fieldForm.field_type === 'Select' || fieldForm.field_type === 'Multiselect') && (                        <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    {(fieldForm.field_type === 'Select' || fieldForm.field_type === 'Multiselect') && (                        <div className="space-y-3 bg-muted/50 p-4 rounded-lg border border-border">
                           <div className="flex items-center justify-between">
                             <Label className="text-sm font-medium">Options</Label>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-muted-foreground">
                               {fieldForm.options?.length || 0} option{(fieldForm.options?.length !== 1) ? 's' : ''}
                             </span>
                           </div>
                           <div className="space-y-3">
                             {fieldForm.options?.map((option, index) => (
                               <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 group">
-                                <div className="bg-white rounded-md border border-gray-200 h-8 w-8 flex items-center justify-center shrink-0">
-                                  <span className="text-sm font-medium text-gray-700">{index + 1}</span>
+                                <div className="bg-card rounded-md border border-border h-8 w-8 flex items-center justify-center shrink-0">
+                                  <span className="text-sm font-medium text-foreground">{index + 1}</span>
                                 </div>
                                 <Input
                                   value={option}
@@ -1088,7 +1091,7 @@ export default function EditFormPage() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => removeOption(index)}
-                                  className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 opacity-80 group-hover:opacity-100 w-full sm:w-auto bg-red-500 hover:bg-red-600 border-red-500 hover:border-red-600 text-white"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 opacity-80 group-hover:opacity-100 w-full sm:w-auto"
                                   aria-label={`Remove option ${index + 1}`}
                                 >
                                   Remove
@@ -1101,13 +1104,13 @@ export default function EditFormPage() {
                               variant="outline"
                               size="sm"
                               onClick={addOption}
-                              className="w-full h-10 bg-white"
+                              className="w-full h-10 bg-card"
                             >
                               + Add Option
                             </Button>
                             
                             {(!fieldForm.options || fieldForm.options.length === 0) && (
-                              <div className="bg-blue-50 text-blue-700 p-3 rounded-md text-sm">
+                              <div className="bg-primary/10 text-primary p-3 rounded-md text-sm">
                                 Click &quot;Add Option&quot; to create choices for this field.
                               </div>
                             )}
@@ -1116,12 +1119,12 @@ export default function EditFormPage() {
                     )}
 
                     {(fieldForm.field_type === 'Text' || fieldForm.field_type === 'LongText') && (
-                      <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <div className="space-y-3 bg-muted/50 p-4 rounded-lg border border-border">
                         <Label className="text-sm font-medium">Text Length Limits</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-blue-600 text-sm font-medium">Min</span>
+                              <span className="text-primary text-sm font-medium">Min</span>
                               <Input
                                 type="number"
                                 placeholder="No minimum"
@@ -1136,11 +1139,11 @@ export default function EditFormPage() {
                                 aria-label="Minimum text length"
                               />
                             </div>
-                            <p className="text-xs text-gray-500">Minimum number of characters required</p>
+                            <p className="text-xs text-muted-foreground">Minimum number of characters required</p>
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-blue-600 text-sm font-medium">Max</span>
+                              <span className="text-primary text-sm font-medium">Max</span>
                               <Input
                                 type="number"
                                 placeholder="No maximum"
@@ -1155,19 +1158,19 @@ export default function EditFormPage() {
                                 aria-label="Maximum text length"
                               />
                             </div>
-                            <p className="text-xs text-gray-500">Maximum number of characters allowed</p>
+                            <p className="text-xs text-muted-foreground">Maximum number of characters allowed</p>
                           </div>
                         </div>
                       </div>
                     )}
 
                     {fieldForm.field_type === 'Numerical' && (
-                      <div className="space-y-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <div className="space-y-3 bg-muted/50 p-4 rounded-lg border border-border">
                         <Label className="text-sm font-medium">Number Range Limits</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-blue-600 text-sm font-medium">Min</span>
+                              <span className="text-primary text-sm font-medium">Min</span>
                               <Input
                                 type="number"
                                 placeholder="No minimum"
@@ -1182,11 +1185,11 @@ export default function EditFormPage() {
                                 aria-label="Minimum value"
                               />
                             </div>
-                            <p className="text-xs text-gray-500">Lowest value accepted by the field</p>
+                            <p className="text-xs text-muted-foreground">Lowest value accepted by the field</p>
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center gap-2">
-                              <span className="text-blue-600 text-sm font-medium">Max</span>
+                              <span className="text-primary text-sm font-medium">Max</span>
                               <Input
                                 type="number"
                                 placeholder="No maximum"
@@ -1201,13 +1204,13 @@ export default function EditFormPage() {
                                 aria-label="Maximum value"
                               />
                             </div>
-                            <p className="text-xs text-gray-500">Highest value accepted by the field</p>
+                            <p className="text-xs text-muted-foreground">Highest value accepted by the field</p>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    <div className="p-4 rounded-lg border border-gray-200 flex items-center space-x-3">
+                    <div className="p-4 rounded-lg border border-border flex items-center space-x-3">
                       <Checkbox
                         id="required"
                         checked={fieldForm.required}
@@ -1217,7 +1220,7 @@ export default function EditFormPage() {
                       />
                       <div>
                         <Label htmlFor="required" className="text-sm font-medium cursor-pointer">Required field</Label>
-                        <p id="required-description" className="text-xs text-gray-500 mt-1">
+                        <p id="required-description" className="text-xs text-muted-foreground mt-1">
                           Users must complete this field before form submission
                         </p>
                       </div>
@@ -1256,7 +1259,7 @@ export default function EditFormPage() {
             {fieldsLoading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                  <div key={i} className="h-16 bg-muted rounded animate-pulse"></div>
                 ))}
               </div>
             ) : sortedFields && sortedFields.length > 0 ? (
@@ -1295,12 +1298,12 @@ export default function EditFormPage() {
                 </SortableContext>
               </DndContext>
             ) : (
-              <div className="text-center py-12 px-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <span className="text-2xl text-gray-400">+</span>
+              <div className="text-center py-12 px-4 bg-muted/50 rounded-lg border border-dashed border-border">
+                <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                  <span className="text-2xl text-muted-foreground">+</span>
                 </div>
-                <h3 className="text-lg font-medium text-gray-700 mb-2">No fields added yet</h3>
-                <p className="text-gray-500 max-w-md mx-auto mb-6">
+                <h3 className="text-lg font-medium text-foreground mb-2">No fields added yet</h3>
+                <p className="text-muted-foreground max-w-md mx-auto mb-6">
                   Start building your form by adding fields like text inputs, checkboxes, or dropdown menus.
                 </p>
                 <Button 
