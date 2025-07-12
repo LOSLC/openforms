@@ -133,8 +133,8 @@ export default function FormResponsesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 text-blue-600 mx-auto animate-spin" />
-          <p className="mt-4 text-gray-600">Loading form...</p>
+          <Loader2 className="h-12 w-12 text-primary mx-auto animate-spin" />
+          <p className="mt-4 text-muted-foreground">Loading form...</p>
         </div>
       </div>
     );
@@ -144,8 +144,8 @@ export default function FormResponsesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Form not found</h1>
-          <p className="text-gray-600 mb-4">The form you&apos;re looking for doesn&apos;t exist.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Form not found</h1>
+          <p className="text-muted-foreground mb-4">The form you&apos;re looking for doesn&apos;t exist.</p>
           <Link href="/admin/forms">
             <Button>Back to Forms</Button>
           </Link>
@@ -155,9 +155,9 @@ export default function FormResponsesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center py-4 lg:h-16 gap-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
@@ -167,10 +167,10 @@ export default function FormResponsesPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+                <h1 className="text-lg sm:text-xl font-semibold text-foreground">
                   Form Responses
                 </h1>
-                <p className="text-sm text-gray-600 truncate max-w-xs sm:max-w-none">
+                <p className="text-sm text-muted-foreground truncate max-w-xs sm:max-w-none">
                   {form.label}
                 </p>
               </div>
@@ -182,7 +182,7 @@ export default function FormResponsesPage() {
                   Export CSV
                 </Button>
               )}
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-muted-foreground">
                 {responses?.length || 0} responses
               </span>
             </div>
@@ -233,7 +233,7 @@ export default function FormResponsesPage() {
                     Next →
                   </Button>
                 </div>
-                <span className="text-sm text-gray-600 whitespace-nowrap">
+                <span className="text-sm text-muted-foreground whitespace-nowrap">
                   {skip + 1} - {Math.min(skip + limit, (responses?.length || 0) + skip)}
                 </span>
               </div>
@@ -247,13 +247,13 @@ export default function FormResponsesPage() {
             {[...Array(3)].map((_, i) => (
               <Card key={i} className="animate-pulse">
                 <CardHeader>
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-4 bg-muted rounded mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/3"></div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     {[...Array(3)].map((_, j) => (
-                      <div key={j} className="h-3 bg-gray-200 rounded"></div>
+                      <div key={j} className="h-3 bg-muted rounded"></div>
                     ))}
                   </div>
                 </CardContent>
@@ -272,9 +272,9 @@ export default function FormResponsesPage() {
                       </CardTitle>
                       <CardDescription className="text-sm">
                         Status: {session.submitted ? (
-                          <span className="text-green-600 font-medium">✓ Submitted</span>
+                          <span className="text-green-600 dark:text-green-400 font-medium">✓ Submitted</span>
                         ) : (
-                          <span className="text-orange-600 font-medium">○ In Progress</span>
+                          <span className="text-orange-600 dark:text-orange-400 font-medium">○ In Progress</span>
                         )}
                       </CardDescription>
                     </div>
@@ -289,21 +289,21 @@ export default function FormResponsesPage() {
                         return posA - posB;
                       })
                       .map((answer) => (
-                      <div key={answer.id} className="border-l-4 border-blue-200 pl-3 sm:pl-4">
+                      <div key={answer.id} className="border-l-4 border-primary/30 pl-3 sm:pl-4">
                         <div className="flex flex-col lg:flex-row justify-between items-start gap-2">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 text-sm sm:text-base">
+                            <h4 className="font-medium text-foreground text-sm sm:text-base">
                               {answer.field.label}
                               {answer.field.required && (
-                                <span className="text-red-500 ml-1">*</span>
+                                <span className="text-destructive ml-1">*</span>
                               )}
                             </h4>
                             {answer.field.description && (
-                              <p className="text-xs sm:text-sm text-gray-600 mb-2">
+                              <p className="text-xs sm:text-sm text-muted-foreground mb-2">
                                 {answer.field.description}
                               </p>
                             )}
-                            <p className="text-gray-800 text-sm sm:text-base break-words">
+                            <p className="text-foreground text-sm sm:text-base break-words">
                               {formatAnswerValue(
                                 answer.value, 
                                 answer.field.field_type, 
@@ -311,7 +311,7 @@ export default function FormResponsesPage() {
                               )}
                             </p>
                           </div>
-                          <div className="text-xs text-gray-500 flex-shrink-0 self-start lg:ml-4">
+                          <div className="text-xs text-muted-foreground flex-shrink-0 self-start lg:ml-4">
                             {answer.field.field_type}
                           </div>
                         </div>
@@ -319,7 +319,7 @@ export default function FormResponsesPage() {
                     ))}
                     
                     {session.answers.length === 0 && (
-                      <p className="text-gray-500 italic text-sm">No answers provided yet.</p>
+                      <p className="text-muted-foreground italic text-sm">No answers provided yet.</p>
                     )}
                   </div>
                 </CardContent>
@@ -329,13 +329,13 @@ export default function FormResponsesPage() {
         ) : (
           <Card>
             <CardContent className="text-center py-12">
-              <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="text-gray-400 h-6 w-6" />
+              <div className="h-12 w-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="text-muted-foreground h-6 w-6" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-foreground mb-2">
                 {searchTerm ? 'No matching responses' : 'No responses yet'}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-muted-foreground mb-4">
                 {searchTerm 
                   ? `No responses match "${searchTerm}". Try a different search term.`
                   : 'No one has submitted responses to this form yet.'
