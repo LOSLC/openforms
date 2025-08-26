@@ -1,6 +1,6 @@
 import ky from 'ky';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.forms.loslc.tech/';
 
 export const api = ky.create({
   prefixUrl: API_BASE_URL,
