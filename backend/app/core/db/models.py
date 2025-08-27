@@ -198,6 +198,7 @@ class AnswerSession(SQLModel, table=True):
             submitted=self.submitted,
             answers=[answer.to_dto() for answer in self.answers],
         )
+    submitted_at: datetime | None = None
 
 
 class LoginSession(SQLModel, table=True):

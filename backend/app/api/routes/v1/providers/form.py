@@ -4,7 +4,7 @@ from uuid import UUID
 import phonenumbers
 from fastapi import HTTPException, Response
 from pydantic import EmailStr, HttpUrl, TypeAdapter, constr
-from sqlmodel import Session, select
+from sqlmodel import Session, asc, select
 from starlette.status import (
     HTTP_401_UNAUTHORIZED,
     HTTP_422_UNPROCESSABLE_ENTITY,
@@ -435,6 +435,7 @@ async def submit(
 
     answer_session.submitted = True
     answer_session.form.submissions += 1
+    answer_session.submitted_at = datetime.now(timezone.utc)
     db_session.add_all([answer_session, answer_session.form])
     db_session.commit()
     response.delete_cookie(ANSWER_SESSION_COOKIE_KEY)
@@ -523,6 +524,7 @@ async def get_responses(
                     AnswerSession.form_id == form.id,
                     AnswerSession.submitted == True,
                 )
+                .order_by(asc(AnswerSession.submitted_at))
                 .offset(skip)
                 .limit(limit)
             )
