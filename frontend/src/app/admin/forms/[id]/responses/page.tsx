@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useGetForm } from '@/lib/hooks/useForms';
-import { useGetFormResponses } from '@/lib/hooks/useAdmin';
+import { useExportFormResponsesCsv, useGetFormResponses } from '@/lib/hooks/useAdmin';
 import { AnswerSessionDTO } from '@/lib/api';
 import { Download, BarChart3, Loader2 } from 'lucide-react';
 
@@ -22,6 +22,7 @@ export default function FormResponsesPage() {
 
   const { data: form, isLoading: formLoading } = useGetForm(formId);
   const { data: responses, isLoading: responsesLoading } = useGetFormResponses(formId, skip, limit);
+  const exportCsvMutation = useExportFormResponsesCsv();
 
   // Filter responses based on search term
   const filteredResponses = responses?.filter((session: AnswerSessionDTO) => {
@@ -71,62 +72,20 @@ export default function FormResponsesPage() {
     }
   };
 
-  const exportToCSV = () => {
-    if (!responses || responses.length === 0) return;
-
-    // Get all unique fields and sort them by position
-    const allFieldsMap = new Map<string, { label: string; position: number | null }>();
-    responses.forEach(session => {
-      session.answers.forEach(answer => {
-        if (!allFieldsMap.has(answer.field.label)) {
-          allFieldsMap.set(answer.field.label, {
-            label: answer.field.label,
-            position: answer.field.position
-          });
-        }
-      });
-    });
-
-    // Sort fields by position and extract labels
-    const sortedFieldLabels = Array.from(allFieldsMap.values())
-      .sort((a, b) => {
-        const posA = a.position ?? 999999;
-        const posB = b.position ?? 999999;
-        return posA - posB;
-      })
-      .map(field => field.label);
-
-    const headers = ['Submission ID', 'Submitted', ...sortedFieldLabels];
-    
-    // Create CSV rows
-    const csvRows = [
-      headers.join(','),
-      ...responses.map(session => {
-        const row = [
-          session.id,
-          session.submitted ? 'Yes' : 'No'
-        ];
-        
-        // Add answer values for each field in position order
-        sortedFieldLabels.forEach(fieldLabel => {
-          const answer = session.answers.find(a => a.field.label === fieldLabel);
-          const value = answer ? formatAnswerValue(answer.value, answer.field.field_type, answer.field.possible_answers) : '';
-          // Escape commas and quotes in CSV
-          const escapedValue = value.includes(',') || value.includes('"') ? `"${value.replace(/"/g, '""')}"` : value;
-          row.push(escapedValue);
-        });
-        
-        return row.join(',');
-      })
-    ];
-
-    // Download CSV
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${form?.label || 'form'}_responses.csv`;
-    link.click();
+  const exportToCSV = async () => {
+    try {
+      const blob = await exportCsvMutation.mutateAsync(formId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${form?.label || 'form'}_responses.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to export CSV', e);
+    }
   };
 
   if (formLoading) {
@@ -177,9 +136,9 @@ export default function FormResponsesPage() {
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2 w-full lg:w-auto">
               {responses && responses.length > 0 && (
-                <Button variant="outline" size="sm" onClick={exportToCSV} className="w-full sm:w-auto">
+                <Button variant="outline" size="sm" onClick={exportToCSV} className="w-full sm:w-auto" disabled={exportCsvMutation.isPending}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export CSV
+                  {exportCsvMutation.isPending ? 'Exporting…' : 'Export CSV'}
                 </Button>
               )}
               <span className="text-sm text-muted-foreground">

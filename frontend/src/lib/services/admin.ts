@@ -67,4 +67,11 @@ export const adminService = {
       searchParams: { skip: skip.toString(), limit: limit.toString() } 
     }).json();
   },
+
+  exportFormResponsesCsv: async (formId: string): Promise<Blob> => {
+    // ky supports .blob() to get binary data
+    return api
+      .get(`api/v1/forms/${formId}/responses/export`)
+      .blob();
+  },
 };

@@ -354,3 +354,17 @@ async def get_form_responses(
         skip=skip,
         limit=limit,
     )
+
+
+@router.get("/{form_id}/responses/export")
+async def export_form_responses_csv(
+    form_id: UUID,
+    db_session: DBSessionDependency,
+    current_user: CurrentUserDependency,
+):
+    """Export all submitted responses for a form as CSV (Admin/Owner only)."""
+    return await form_provider.export_responses_csv(
+        db_session=db_session,
+        current_user=current_user,
+        form_id=form_id,
+    )
