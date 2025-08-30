@@ -237,8 +237,8 @@ export default function FormPage() {
         });
       }
 
-      // Finalize submission
-      await submitSessionMutation.mutateAsync();
+  // Finalize submission (by form)
+  await submitSessionMutation.mutateAsync(formId);
       setSubmitted(true);
     } catch (error) {
       console.error('Failed to submit session:', error);
