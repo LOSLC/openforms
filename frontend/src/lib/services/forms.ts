@@ -52,12 +52,12 @@ export const formsService = {
     return api.get(`api/v1/forms/sessions/${sessionId}`).json();
   },
 
-  submitSession: async (sessionId: string): Promise<MessageResponse> => {
-    return api.post(`api/v1/forms/sessions/${sessionId}/submit`).json();
+  submitSession: async (formId: string, sessionId: string): Promise<MessageResponse> => {
+    return api.post(`api/v1/forms/${formId}/sessions/${sessionId}/submit`).json();
   },
 
-  // Submit session using cookie (no sessionId required)
-  submitCurrentSession: async (): Promise<MessageResponse> => {
-    return api.post('api/v1/forms/sessions/submit').json();
+  // Submit session using cookie (no sessionId required) for a specific form
+  submitCurrentSession: async (formId: string): Promise<MessageResponse> => {
+    return api.post(`api/v1/forms/${formId}/sessions/submit`).json();
   },
 };

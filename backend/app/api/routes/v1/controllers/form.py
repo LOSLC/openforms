@@ -309,17 +309,19 @@ async def delete_response(
     )
 
 
-@router.post("/sessions/submit", response_model=MessageResponse)
+@router.post("/{form_id}/sessions/submit", response_model=MessageResponse)
 async def submit_responses(
+    form_id: UUID,
     response: Response,
     db_session: DBSessionDependency,
     answer_session_id: CurrentAnswerSessionDependency = None,
 ):
-    """Submit all responses in a session (Public endpoint)"""
+    """Submit all responses in a session for a specific form (Public endpoint)."""
     return await form_provider.submit(
         db_session=db_session,
+        answer_session_id=UUID(answer_session_id) if answer_session_id else None,
+        form_id=form_id,
         response=response,
-        answer_session_id=UUID(answer_session_id),
     )
 
 

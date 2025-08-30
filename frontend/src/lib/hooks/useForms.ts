@@ -200,7 +200,8 @@ export const useSubmitSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: formsService.submitSession,
+    mutationFn: ({ formId, sessionId }: { formId: string; sessionId: string }) =>
+      formsService.submitSession(formId, sessionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["session"] });
     },
@@ -211,7 +212,7 @@ export const useSubmitCurrentSession = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: formsService.submitCurrentSession,
+    mutationFn: (formId: string) => formsService.submitCurrentSession(formId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["session"] });
     },

@@ -3,9 +3,9 @@ import io
 from datetime import date, datetime, timezone
 from uuid import UUID
 
-from fastapi.responses import StreamingResponse
 import phonenumbers
 from fastapi import HTTPException, Response
+from fastapi.responses import StreamingResponse
 from pydantic import EmailStr, HttpUrl, TypeAdapter, constr
 from sqlmodel import Session, asc, select
 from starlette.status import (
@@ -393,7 +393,10 @@ async def delete_response(
 
 
 async def submit(
-    db_session: Session, answer_session_id: UUID | None, response: Response
+    db_session: Session,
+    answer_session_id: UUID | None,
+    form_id: UUID,
+    response: Response,
 ):
     answer_session = check_existence(
         db_session.get(
@@ -416,14 +419,14 @@ async def submit(
     all_required_fields = db_session.exec(
         select(FormField).where(
             FormField.required == True,
-            FormField.form_id == answer_session.form_id,
+            FormField.form_id == form_id,
         )
     ).all()
     answered_required_fields = db_session.exec(
         select(FormField)
         .where(
             FormField.required == True,
-            FormField.form_id == answer_session.form_id,
+            FormField.form_id == form_id,
         )
         .join(FieldAnswer)
         .where(FieldAnswer.session_id == answer_session.id)
@@ -577,16 +580,23 @@ async def export_responses_csv(
     ).all()
 
     # Header: field labels followed by metadata columns
-    headers = [field.label for field in fields] + ["Response ID", "Submitted At"]
+    headers = [field.label for field in fields] + [
+        "Response ID",
+        "Submitted At",
+    ]
     csv_writer.writerow(headers)
 
     # Rows: one per submitted session
     for session in answer_sessions:
         # Map field_id to value for quick lookup
-        values_by_field_id = {ans.field_id: (ans.value or "") for ans in session.answers}
+        values_by_field_id = {
+            ans.field_id: (ans.value or "") for ans in session.answers
+        }
         row = [values_by_field_id.get(field.id, "") for field in fields]
         submitted_at = (
-            session.submitted_at.isoformat() if session.submitted_at is not None else ""
+            session.submitted_at.isoformat()
+            if session.submitted_at is not None
+            else ""
         )
         row += [str(session.id), submitted_at]
         csv_writer.writerow(row)
@@ -595,7 +605,7 @@ async def export_responses_csv(
     csv_data = csv_output.getvalue()
     filename_label = (form.label or "form").strip().replace(" ", "_")
     headers_dict = {
-        "Content-Disposition": f"attachment; filename=\"{filename_label}_responses.csv\""
+        "Content-Disposition": f'attachment; filename="{filename_label}_responses.csv"'
     }
     # Use a StreamingResponse with bytes to ensure proper download behavior
     return StreamingResponse(
