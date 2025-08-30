@@ -27,6 +27,8 @@ export default function FormPage() {
   
   const [responses, setResponses] = useState<FormResponse>({});
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmittingAll, setIsSubmittingAll] = useState(false);
+  const [submitError, setSubmitError] = useState<Error | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [translatedContent, setTranslatedContent] = useState<FormTranslationDTO | null>(null);
   const [isTranslated, setIsTranslated] = useState(false);
@@ -218,11 +220,31 @@ export default function FormPage() {
       return; // Don't submit if validation fails
     }
 
+    if (!currentFields) return;
+
+    setIsSubmittingAll(true);
+    setSubmitError(null);
+
     try {
+      // Resend all non-empty field values to ensure backend is up to date
+      for (const field of currentFields) {
+        const value = responses[field.id];
+        // Skip empty values (prevents invalid Boolean "" etc.)
+        if (value === undefined || value === null || value === '') continue;
+        await submitResponseMutation.mutateAsync({
+          field_id: field.id,
+          value,
+        });
+      }
+
+      // Finalize submission
       await submitSessionMutation.mutateAsync();
       setSubmitted(true);
     } catch (error) {
       console.error('Failed to submit session:', error);
+      setSubmitError(error as Error);
+    } finally {
+      setIsSubmittingAll(false);
     }
   };
 
@@ -293,8 +315,8 @@ export default function FormPage() {
               
               <FormSubmission
                 onSubmit={handleSubmit}
-                isSubmitting={submitSessionMutation.isPending}
-                error={submitSessionMutation.error}
+                isSubmitting={isSubmittingAll}
+                error={submitError ?? submitSessionMutation.error}
               />
             </CardContent>
           </Card>

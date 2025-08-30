@@ -1,6 +1,9 @@
+import csv
+import io
 from datetime import date, datetime, timezone
 from uuid import UUID
 
+from fastapi.responses import StreamingResponse
 import phonenumbers
 from fastapi import HTTPException, Response
 from pydantic import EmailStr, HttpUrl, TypeAdapter, constr
@@ -531,6 +534,75 @@ async def get_responses(
         ).all()
     )
     return [answer_session.to_dto() for answer_session in answer_sessions]
+
+
+async def export_responses_csv(
+    db_session: Session, current_user: User, form_id: UUID
+):
+    PermissionChecker(
+        db_session=db_session,
+        roles=current_user.roles,
+        bypass_roles=[SUPER_ADMIN_ROLE_NAME, ADMIN_ROLE_NAME],
+        pcheck_models=[
+            PermissionCheckModel(
+                resource_name=FORM_RESOURCE,
+                resource_id=form_id,
+                action_names=[ACTION_READWRITE],
+            )
+        ],
+    ).check()
+    form = check_existence(db_session.get(Form, form_id))
+    answer_sessions = check_existence(
+        (
+            db_session.exec(
+                select(AnswerSession)
+                .where(
+                    AnswerSession.form_id == form.id,
+                    AnswerSession.submitted == True,
+                )
+                .order_by(asc(AnswerSession.submitted_at))
+            )
+        ).all()
+    )
+
+    # Prepare CSV writer
+    csv_output = io.StringIO()
+    csv_writer = csv.writer(csv_output)
+
+    # Fetch fields in defined order
+    fields = db_session.exec(
+        select(FormField)
+        .where(FormField.form_id == form.id)
+        .order_by(asc(FormField.position))
+    ).all()
+
+    # Header: field labels followed by metadata columns
+    headers = [field.label for field in fields] + ["Response ID", "Submitted At"]
+    csv_writer.writerow(headers)
+
+    # Rows: one per submitted session
+    for session in answer_sessions:
+        # Map field_id to value for quick lookup
+        values_by_field_id = {ans.field_id: (ans.value or "") for ans in session.answers}
+        row = [values_by_field_id.get(field.id, "") for field in fields]
+        submitted_at = (
+            session.submitted_at.isoformat() if session.submitted_at is not None else ""
+        )
+        row += [str(session.id), submitted_at]
+        csv_writer.writerow(row)
+
+    # Build response
+    csv_data = csv_output.getvalue()
+    filename_label = (form.label or "form").strip().replace(" ", "_")
+    headers_dict = {
+        "Content-Disposition": f"attachment; filename=\"{filename_label}_responses.csv\""
+    }
+    # Use a StreamingResponse with bytes to ensure proper download behavior
+    return StreamingResponse(
+        iter([csv_data.encode("utf-8")]),
+        media_type="text/csv; charset=utf-8",
+        headers=headers_dict,
+    )
 
 
 async def get_forms(

@@ -131,3 +131,9 @@ export const useGetFormResponses = (formId: string, skip = 0, limit = 10) => {
     enabled: !!formId,
   });
 };
+
+export const useExportFormResponsesCsv = () => {
+  return useMutation({
+    mutationFn: (formId: string) => adminService.exportFormResponsesCsv(formId),
+  });
+};
