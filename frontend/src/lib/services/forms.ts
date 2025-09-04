@@ -21,11 +21,16 @@ export const formsService = {
   },
 
   // Translation
-  translateForm: async (formId: string, language: SupportedLanguages): Promise<FormTranslationDTO> => {
-    return api.post(`api/v1/forms/${formId}/translate`, { 
-      searchParams: { language },
-      timeout: 60000, // 1 minute timeout for translation
-    }).json();
+  translateForm: async (
+    formId: string,
+    language: SupportedLanguages,
+  ): Promise<FormTranslationDTO> => {
+    return api
+      .post(`api/v1/forms/${formId}/translate`, {
+        searchParams: { language },
+        timeout: 60000, // 1 minute timeout for translation
+      })
+      .json();
   },
 
   // Response submission
@@ -55,12 +60,17 @@ export const formsService = {
 
   // Kept for backward compatibility if specific session endpoints are added later
   // Currently not used and backend doesn't expose this route variant
-  getAnswerSession: async (_sessionId: string): Promise<AnswerSessionDTO> => {
+  getAnswerSession: async (): Promise<AnswerSessionDTO> => {
     return api.get(`api/v1/forms/sessions`).json();
   },
 
-  submitSession: async (formId: string, sessionId: string): Promise<MessageResponse> => {
-    return api.post(`api/v1/forms/${formId}/sessions/${sessionId}/submit`).json();
+  submitSession: async (
+    formId: string,
+    sessionId: string,
+  ): Promise<MessageResponse> => {
+    return api
+      .post(`api/v1/forms/${formId}/sessions/${sessionId}/submit`)
+      .json();
   },
 
   // Submit session using cookie (no sessionId required) for a specific form
