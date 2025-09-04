@@ -257,11 +257,12 @@ export default function FormPage() {
             delete next[fieldId];
             return next;
           });
-        } catch (e: any) {
+        } catch (e: unknown) {
           // Show error on the specific field
+          const message = e instanceof Error ? e.message : 'Failed to save. Will retry...';
           setFieldErrors(prev => ({
             ...prev,
-            [fieldId]: e?.message || 'Failed to save. Will retry...',
+            [fieldId]: message,
           }));
         }
       }
@@ -312,9 +313,9 @@ export default function FormPage() {
         await submitResponseMutation.mutateAsync({ field_id: field.id, value });
       }
       // success UI is subtle; autosave tooltip already informs restoration
-    } catch (e: any) {
+    } catch (e: unknown) {
       // surface a generic error banner via submitError for now
-      setSubmitError(e as Error);
+      setSubmitError(e instanceof Error ? e : new Error('Failed to save progress'));
     } finally {
       setIsSaving(false);
     }

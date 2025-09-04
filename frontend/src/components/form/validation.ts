@@ -6,7 +6,10 @@ const parseBounds = (range?: string | null): { min?: number; max?: number } => {
   const [minRaw, maxRaw] = range.split(':');
   const min = minRaw !== undefined && minRaw !== '' ? Number(minRaw) : undefined;
   const max = maxRaw !== undefined && maxRaw !== '' ? Number(maxRaw) : undefined;
-  return { min: isNaN(Number(min)) ? undefined : min, max: isNaN(Number(max)) ? undefined : max } as any;
+  return {
+    min: typeof min === 'number' && !Number.isNaN(min) ? min : undefined,
+    max: typeof max === 'number' && !Number.isNaN(max) ? max : undefined,
+  };
 };
 
 const alphaRegex = /^[a-zA-Z\s]*$/;
@@ -73,7 +76,7 @@ const schemaForField = (field: FormField) => {
       return optionalize(s);
     }
     case 'Email': {
-  let base: z.ZodString = z.string().email(`${label} must be a valid email address`);
+  const base: z.ZodString = z.string().email(`${label} must be a valid email address`);
   let schema: z.ZodTypeAny = base;
   if (isRequired) schema = schema.refine((v: string) => v.trim() !== '', `${label} is required`);
   return optionalize(schema);
@@ -91,7 +94,7 @@ const schemaForField = (field: FormField) => {
       return optionalize(s);
     }
     case 'URL': {
-  let base: z.ZodString = z.string().url(`${label} must be a valid URL`);
+  const base: z.ZodString = z.string().url(`${label} must be a valid URL`);
   let schema: z.ZodTypeAny = base;
   if (isRequired) schema = schema.refine((v: string) => v.trim() !== '', `${label} is required`);
   return optionalize(schema);
