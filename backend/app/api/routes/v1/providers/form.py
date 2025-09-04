@@ -325,7 +325,6 @@ async def respond_to_field(
         if not field_already_answered
         else answer_fields[0]
     )
-    validate_answer(answer=response_data.value, field=field)
     response.value = response_data.value
     db_session.add(response)
     db_session.commit()
@@ -353,10 +352,6 @@ async def edit_response(
         detail="Answer session not found.",
     )
     answer = check_existence(db_session.get(FieldAnswer, answer_id))
-    field: FormField = check_existence(
-        db_session.get(FormField, answer.field_id)
-    )
-    validate_answer(value, field)
     answer.value = value
     db_session.add(answer)
     db_session.commit()
@@ -438,6 +433,14 @@ async def submit(
             detail=f"Field '{form_field.label}' not answered.",
             status_code=HTTP_422_UNPROCESSABLE_ENTITY,
         )
+
+    # Validate all answers only at submission time
+    for ans in answer_session.answers:
+        # Ensure field is loaded; fallback to DB if necessary
+        field = ans.field if hasattr(ans, "field") and ans.field else db_session.get(FormField, ans.field_id)
+        if field is None:
+            continue
+        validate_answer(ans.value, field)
 
     answer_session.submitted = True
     answer_session.form.submissions += 1
