@@ -90,6 +90,20 @@ async def get_user_forms(
     )
 
 
+@router.get("/sessions", response_model=AnswerSessionDTO)
+async def get_answer_session(
+    db_session: DBSessionDependency,
+    answer_session_id: Annotated[
+    str | None, Cookie(alias=ANSWER_SESSION_COOKIE_KEY)
+    ] = None,
+):
+    """Get an answer session (Public endpoint for session management)"""
+    return await form_provider.get_answer_session(
+        db_session=db_session,
+    answer_session_id=UUID(answer_session_id) if answer_session_id else None,
+    )
+
+
 @router.get("/{form_id}", response_model=FormDTO)
 async def get_form(
     form_id: UUID,
@@ -319,23 +333,11 @@ async def submit_responses(
     """Submit all responses in a session for a specific form (Public endpoint)."""
     return await form_provider.submit(
         db_session=db_session,
-        answer_session_id=UUID(answer_session_id) if answer_session_id else None,
+        answer_session_id=UUID(answer_session_id)
+        if answer_session_id
+        else None,
         form_id=form_id,
         response=response,
-    )
-
-
-@router.get("/sessions", response_model=AnswerSessionDTO)
-async def get_answer_session(
-    db_session: DBSessionDependency,
-    answer_session_id: Annotated[
-        UUID | None, Cookie(alias=ANSWER_SESSION_COOKIE_KEY)
-    ] = None,
-):
-    """Get an answer session (Public endpoint for session management)"""
-    return await form_provider.get_answer_session(
-        db_session=db_session,
-        answer_session_id=answer_session_id,
     )
 
 

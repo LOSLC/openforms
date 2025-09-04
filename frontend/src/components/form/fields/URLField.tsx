@@ -21,7 +21,7 @@ export const URLField: React.FC<BaseFieldProps> = ({
         type="url"
         value={value}
         onChange={(e) => onChange(field.id, e.target.value)}
-        placeholder={`Enter ${field.label.toLowerCase()}...`}
+        placeholder="e.g. https://example.com"
         required={field.required}
         className={`h-11 text-base ${validationError ? 'border-destructive focus:border-destructive' : ''}`}
       />

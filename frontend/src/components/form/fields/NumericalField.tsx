@@ -16,7 +16,7 @@ export const NumericalField: React.FC<BaseFieldProps> = ({
       validationError={validationError} 
       wrapWithTranslation={wrapWithTranslation}
     >
-      <Input
+  <Input
         id={field.id}
         type="number"
         value={value}
@@ -36,7 +36,13 @@ export const NumericalField: React.FC<BaseFieldProps> = ({
             e.preventDefault();
           }
         }}
-        placeholder={`Enter ${field.label.toLowerCase()}...`}
+        placeholder={(() => {
+          const [min, max] = (field.number_bounds || '').split(':');
+          if (min && max) return `e.g. ${min} - ${max}`;
+          if (min) return `e.g. ≥ ${min}`;
+          if (max) return `e.g. ≤ ${max}`;
+          return 'e.g. 42';
+        })()}
         required={field.required}
         min={field.number_bounds?.split(':')[0]}
         max={field.number_bounds?.split(':')[1]}

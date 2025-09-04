@@ -48,8 +48,15 @@ export const formsService = {
   },
 
   // Session management
-  getAnswerSession: async (sessionId: string): Promise<AnswerSessionDTO> => {
-    return api.get(`api/v1/forms/sessions/${sessionId}`).json();
+  // Fetch current answer session using cookie (no sessionId required)
+  getCurrentAnswerSession: async (): Promise<AnswerSessionDTO> => {
+    return api.get(`api/v1/forms/sessions`).json();
+  },
+
+  // Kept for backward compatibility if specific session endpoints are added later
+  // Currently not used and backend doesn't expose this route variant
+  getAnswerSession: async (_sessionId: string): Promise<AnswerSessionDTO> => {
+    return api.get(`api/v1/forms/sessions`).json();
   },
 
   submitSession: async (formId: string, sessionId: string): Promise<MessageResponse> => {

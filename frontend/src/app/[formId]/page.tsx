@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useGetForm, useGetFormFields, useSubmitResponse, useSubmitCurrentSession, useTranslateForm } from '@/lib/hooks/useForms';
+import { useGetForm, useGetFormFields, useSubmitResponse, useSubmitCurrentSession, useTranslateForm, useGetCurrentSession } from '@/lib/hooks/useForms';
 import { useHoverTranslation } from '@/lib/hooks/useHoverTranslation';
 import { FormHead } from '@/components/FormHead';
 import { TranslatableText } from '@/components/TranslatableText';
@@ -28,6 +28,7 @@ export default function FormPage() {
   const [responses, setResponses] = useState<FormResponse>({});
   const [submitted, setSubmitted] = useState(false);
   const [isSubmittingAll, setIsSubmittingAll] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [submitError, setSubmitError] = useState<Error | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [translatedContent, setTranslatedContent] = useState<FormTranslationDTO | null>(null);
@@ -35,6 +36,8 @@ export default function FormPage() {
   const [originalFieldsMap, setOriginalFieldsMap] = useState<Record<string, FormField>>({});
   const [hoverTranslationLanguage, setHoverTranslationLanguage] = useState<SupportedLanguages | null>(null);
   const [translationMethod, setTranslationMethod] = useState<'hover' | 'full'>('hover');
+  const [dirtyFields, setDirtyFields] = useState<Set<string>>(new Set());
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   
   // Initialize hover translation hook
   const {
@@ -46,6 +49,7 @@ export default function FormPage() {
   
   const { data: form, isLoading: formLoading } = useGetForm(formId);
   const { data: fields, isLoading: fieldsLoading } = useGetFormFields(formId);
+  const { data: currentSession } = useGetCurrentSession();
   const submitResponseMutation = useSubmitResponse();
   const submitSessionMutation = useSubmitCurrentSession();
   const translateFormMutation = useTranslateForm();
@@ -64,6 +68,21 @@ export default function FormPage() {
       setOriginalFieldsMap(fieldsMap);
     }
   }, [fields, isTranslated]);
+
+  // Prefill from existing session answers when user returns
+  useEffect(() => {
+    if (!currentSession || !currentSession.answers) return;
+    if (currentSession.form_id !== formId) return;
+    const next: Record<string, string> = {};
+    for (const ans of currentSession.answers) {
+      if (ans.value !== null && ans.value !== undefined && ans.value !== '') {
+        next[ans.field_id] = ans.value;
+      }
+    }
+    if (Object.keys(next).length > 0) {
+      setResponses(prev => ({ ...prev, ...next }));
+    }
+  }, [currentSession, formId]);
 
   const handleTranslate = async (language: SupportedLanguages) => {
     try {
@@ -190,6 +209,12 @@ export default function FormPage() {
 
   const handleFieldChange = async (fieldId: string, value: string | null) => {
     setResponses(prev => ({ ...prev, [fieldId]: value || undefined }));
+    setDirtyFields(prev => {
+      const next = new Set(prev);
+      if (value !== null && value !== '') next.add(fieldId);
+      else next.delete(fieldId);
+      return next;
+    });
     
     // Clear validation error for this field when user starts typing
     if (validationErrors[fieldId]) {
@@ -199,21 +224,50 @@ export default function FormPage() {
         return newErrors;
       });
     }
-    
-    // Don't submit empty values
-    if (value === null || value === '') {
-      return;
-    }
-    
-    try {
-      await submitResponseMutation.mutateAsync({
-        field_id: fieldId,
-        value,
+
+    // Clear any API error for this field on change
+    if (fieldErrors[fieldId]) {
+      setFieldErrors(prev => {
+        const next = { ...prev };
+        delete next[fieldId];
+        return next;
       });
-    } catch (error) {
-      console.error('Failed to submit response:', error);
     }
+    
+    // No immediate submit (autosave takes care every 30s)
   };
+
+  // Autosave dirty non-empty fields every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (!dirtyFields.size) return;
+      for (const fieldId of Array.from(dirtyFields)) {
+        const value = responses[fieldId];
+        if (value === undefined || value === null || value === '') continue;
+        try {
+          await submitResponseMutation.mutateAsync({ field_id: fieldId, value });
+          // on success, clear from dirty set and any error
+          setDirtyFields(prev => {
+            const next = new Set(prev);
+            next.delete(fieldId);
+            return next;
+          });
+          setFieldErrors(prev => {
+            const next = { ...prev };
+            delete next[fieldId];
+            return next;
+          });
+        } catch (e: any) {
+          // Show error on the specific field
+          setFieldErrors(prev => ({
+            ...prev,
+            [fieldId]: e?.message || 'Failed to save. Will retry...',
+          }));
+        }
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [dirtyFields, responses, submitResponseMutation]);
 
   const handleSubmit = async () => {
     if (!validateAllFields()) {
@@ -225,7 +279,7 @@ export default function FormPage() {
     setIsSubmittingAll(true);
     setSubmitError(null);
 
-    try {
+  try {
       // Resend all non-empty field values to ensure backend is up to date
       for (const field of currentFields) {
         const value = responses[field.id];
@@ -245,6 +299,24 @@ export default function FormPage() {
       setSubmitError(error as Error);
     } finally {
       setIsSubmittingAll(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!currentFields) return;
+    setIsSaving(true);
+    try {
+      for (const field of currentFields) {
+        const value = responses[field.id];
+        if (value === undefined || value === null || value === '') continue;
+        await submitResponseMutation.mutateAsync({ field_id: field.id, value });
+      }
+      // success UI is subtle; autosave tooltip already informs restoration
+    } catch (e: any) {
+      // surface a generic error banner via submitError for now
+      setSubmitError(e as Error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -304,7 +376,7 @@ export default function FormPage() {
                 <FormFieldList
                   fields={currentFields}
                   responses={responses}
-                  validationErrors={validationErrors}
+                  validationErrors={{ ...validationErrors, ...fieldErrors }}
                   isTranslated={isTranslated}
                   onFieldChange={handleFieldChange}
                   wrapWithTranslation={wrapWithTranslation}
@@ -317,6 +389,8 @@ export default function FormPage() {
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmittingAll}
                 error={submitError ?? submitSessionMutation.error}
+                onSave={handleSave}
+                isSaving={isSaving}
               />
             </CardContent>
           </Card>
