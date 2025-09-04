@@ -21,7 +21,7 @@ export const EmailField: React.FC<BaseFieldProps> = ({
         type="email"
         value={value}
         onChange={(e) => onChange(field.id, e.target.value)}
-        placeholder={`Enter ${field.label.toLowerCase()}...`}
+        placeholder="e.g. name@example.com"
         required={field.required}
         className={`h-11 text-base ${validationError ? 'border-destructive focus:border-destructive' : ''}`}
       />

@@ -21,6 +21,7 @@ export const DateField: React.FC<BaseFieldProps> = ({
         type="date"
         value={value}
         onChange={(e) => onChange(field.id, e.target.value)}
+        placeholder="e.g. 2025-09-04"
         required={field.required}
         className={`h-11 text-base ${validationError ? 'border-destructive focus:border-destructive' : ''}`}
       />

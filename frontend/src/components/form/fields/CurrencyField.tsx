@@ -23,7 +23,7 @@ export const CurrencyField: React.FC<BaseFieldProps> = ({
         min="0"
         value={value}
         onChange={(e) => onChange(field.id, e.target.value)}
-        placeholder={`Enter ${field.label.toLowerCase()}...`}
+        placeholder="e.g. 199.99"
         required={field.required}
         className={`h-11 text-base ${validationError ? 'border-destructive focus:border-destructive' : ''}`}
       />

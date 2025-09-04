@@ -24,7 +24,7 @@ export const AlphanumField: React.FC<BaseFieldProps> = ({
           const alphanumValue = e.target.value.replace(/[^a-zA-Z0-9\s]/g, '');
           onChange(field.id, alphanumValue);
         }}
-        placeholder={`Enter ${field.label.toLowerCase()}...`}
+        placeholder="e.g. A1B2C3"
         required={field.required}
         className={`h-11 text-base ${validationError ? 'border-destructive focus:border-destructive' : ''}`}
       />

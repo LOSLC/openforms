@@ -19,7 +19,7 @@ export const PhoneField: React.FC<BaseFieldProps> = ({
       <PhoneInput
         value={value}
         onChange={(val) => onChange(field.id, val || '')}
-        placeholder={`Enter ${field.label.toLowerCase()}...`}
+  placeholder="e.g. 202 555 0142"
         className={validationError ? 'border-destructive' : ''}
         aria-describedby={field.description ? `${field.id}-desc` : undefined}
       />

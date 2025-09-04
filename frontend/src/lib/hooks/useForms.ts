@@ -188,11 +188,11 @@ export const useDeleteResponse = () => {
 };
 
 // Session management hooks
-export const useGetAnswerSession = (sessionId: string) => {
+// Fetch current session via cookie
+export const useGetCurrentSession = () => {
   return useQuery({
-    queryKey: ["session", sessionId],
-    queryFn: () => formsService.getAnswerSession(sessionId),
-    enabled: !!sessionId,
+    queryKey: ["session", "current"],
+    queryFn: () => formsService.getCurrentAnswerSession(),
   });
 };
 
