@@ -15,6 +15,7 @@ from starlette.status import (
 
 from app.api.routes.v1.dto.form import (
     FormFieldType,
+    FormSaveDTO,
     FormTranslationModel,
     ResponseCreationDTO,
 )
@@ -437,7 +438,11 @@ async def submit(
     # Validate all answers only at submission time
     for ans in answer_session.answers:
         # Ensure field is loaded; fallback to DB if necessary
-        field = ans.field if hasattr(ans, "field") and ans.field else db_session.get(FormField, ans.field_id)
+        field = (
+            ans.field
+            if hasattr(ans, "field") and ans.field
+            else db_session.get(FormField, ans.field_id)
+        )
         if field is None:
             continue
         validate_answer(ans.value, field)
@@ -502,6 +507,41 @@ async def get_answer_session(
     answer_session = check_existence(
         db_session.get(AnswerSession, check_existence(answer_session_id))
     )
+    return answer_session.to_dto()
+
+
+async def save_responses(
+    db_session: Session, answer_session_id: UUID | None, data: FormSaveDTO
+):
+    answer_session: AnswerSession
+    if answer_session_id is not None:
+        answer_session = check_existence(
+            db_session.get(AnswerSession, answer_session_id)
+        )
+    else:
+        new_rs = AnswerSession(form_id=data.form_id)
+        db_session.add(new_rs)
+        db_session.commit()
+        db_session.refresh(new_rs)
+        answer_session = new_rs
+    for k, v in data.field_answers.items():
+        field = check_existence(db_session.get(FormField, k))
+        validate_answer(field=field, answer=v)
+        field_answer = db_session.exec(
+            select(FieldAnswer).where(
+                FieldAnswer.session_id == answer_session.id,
+                FieldAnswer.field_id == field.id,
+            )
+        ).first()
+        if not field_answer:
+            field_answer = FieldAnswer(
+                field_id=field.id, session_id=answer_session.id
+            )
+            db_session.add(field_answer)
+            db_session.commit()
+        field_answer.value = v
+        db_session.add(field_answer)
+        db_session.commit()
     return answer_session.to_dto()
 
 
@@ -571,27 +611,22 @@ async def export_responses_csv(
         ).all()
     )
 
-    # Prepare CSV writer
     csv_output = io.StringIO()
     csv_writer = csv.writer(csv_output)
 
-    # Fetch fields in defined order
     fields = db_session.exec(
         select(FormField)
         .where(FormField.form_id == form.id)
         .order_by(asc(FormField.position))
     ).all()
 
-    # Header: field labels followed by metadata columns
     headers = [field.label for field in fields] + [
         "Response ID",
         "Submitted At",
     ]
     csv_writer.writerow(headers)
 
-    # Rows: one per submitted session
     for session in answer_sessions:
-        # Map field_id to value for quick lookup
         values_by_field_id = {
             ans.field_id: (ans.value or "") for ans in session.answers
         }
@@ -604,13 +639,11 @@ async def export_responses_csv(
         row += [str(session.id), submitted_at]
         csv_writer.writerow(row)
 
-    # Build response
     csv_data = csv_output.getvalue()
     filename_label = (form.label or "form").strip().replace(" ", "_")
     headers_dict = {
         "Content-Disposition": f'attachment; filename="{filename_label}_responses.csv"'
     }
-    # Use a StreamingResponse with bytes to ensure proper download behavior
     return StreamingResponse(
         iter([csv_data.encode("utf-8")]),
         media_type="text/csv; charset=utf-8",

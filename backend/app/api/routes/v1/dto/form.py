@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Literal
+from typing import Dict, List, Literal
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -19,6 +19,11 @@ FormFieldType = Literal[
     "Alpha",
     "Alphanum",
 ]
+
+
+class FormSaveDTO(BaseModel):
+    form_id: UUID
+    field_answers: Dict[UUID, str | None]  # field_id -> value
 
 
 class FormTranslationModel(BaseModel):
