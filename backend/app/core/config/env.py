@@ -19,6 +19,7 @@ EnvKey = Literal[
     "PG_PASSWORD",
     "PG_DATABASE",
     "GEMINI_API_KEY",
+    "CORS_ORIGINS",
 ]
 
 
