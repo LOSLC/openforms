@@ -164,6 +164,17 @@ export const useSubmitResponse = () => {
   });
 };
 
+export const useSaveResponses = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: formsService.saveResponses,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["session"] });
+    },
+  });
+};
+
 export const useEditResponse = () => {
   const queryClient = useQueryClient();
 

@@ -1,13 +1,14 @@
 import {
   api,
-  FormDTO,
-  FormFieldDTO,
-  FieldResponseDTO,
-  AnswerSessionDTO,
-  ResponseCreationRequest,
-  MessageResponse,
-  FormTranslationDTO,
-  SupportedLanguages,
+  type FormDTO,
+  type FormFieldDTO,
+  type FieldResponseDTO,
+  type AnswerSessionDTO,
+  type ResponseCreationRequest,
+  type FormSaveRequest,
+  type MessageResponse,
+  type FormTranslationDTO,
+  type SupportedLanguages,
 } from "../api";
 
 export const formsService = {
@@ -40,6 +41,13 @@ export const formsService = {
     return api.post("api/v1/forms/responses", { json: data }).json();
   },
 
+  // Batch save responses
+  saveResponses: async (
+    data: FormSaveRequest,
+  ): Promise<AnswerSessionDTO> => {
+    return api.post("api/v1/forms/responses/save", { json: data }).json();
+  },
+
   editResponse: async (answerId: string, value: string): Promise<void> => {
     return api
       .put(`api/v1/forms/responses/${answerId}`, {
@@ -55,13 +63,13 @@ export const formsService = {
   // Session management
   // Fetch current answer session using cookie (no sessionId required)
   getCurrentAnswerSession: async (): Promise<AnswerSessionDTO> => {
-    return api.get(`api/v1/forms/sessions`).json();
+    return api.get("api/v1/forms/sessions").json();
   },
 
   // Kept for backward compatibility if specific session endpoints are added later
   // Currently not used and backend doesn't expose this route variant
   getAnswerSession: async (): Promise<AnswerSessionDTO> => {
-    return api.get(`api/v1/forms/sessions`).json();
+    return api.get("api/v1/forms/sessions").json();
   },
 
   submitSession: async (

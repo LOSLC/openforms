@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { useGetForm, useGetFormFields, useSubmitResponse, useSubmitCurrentSession, useTranslateForm, useGetCurrentSession } from '@/lib/hooks/useForms';
+import { useGetForm, useGetFormFields, useSubmitResponse, useSaveResponses, useSubmitCurrentSession, useTranslateForm, useGetCurrentSession } from '@/lib/hooks/useForms';
 import { useHoverTranslation } from '@/lib/hooks/useHoverTranslation';
 import { FormHead } from '@/components/FormHead';
 import { TranslatableText } from '@/components/TranslatableText';
@@ -51,6 +51,7 @@ export default function FormPage() {
   const { data: fields, isLoading: fieldsLoading } = useGetFormFields(formId);
   const { data: currentSession } = useGetCurrentSession();
   const submitResponseMutation = useSubmitResponse();
+  const saveResponsesMutation = useSaveResponses();
   const submitSessionMutation = useSubmitCurrentSession();
   const translateFormMutation = useTranslateForm();
 
@@ -237,38 +238,39 @@ export default function FormPage() {
     // No immediate submit (autosave takes care every 30s)
   };
 
-  // Autosave dirty non-empty fields every 30 seconds
+  // Autosave dirty non-empty fields every 30 seconds using batch save
   useEffect(() => {
     const interval = setInterval(async () => {
       if (!dirtyFields.size) return;
+      
+      // Collect all dirty field values to save
+      const fieldAnswers: Record<string, string | null> = {};
       for (const fieldId of Array.from(dirtyFields)) {
         const value = responses[fieldId];
         if (value === undefined || value === null || value === '') continue;
-        try {
-          await submitResponseMutation.mutateAsync({ field_id: fieldId, value });
-          // on success, clear from dirty set and any error
-          setDirtyFields(prev => {
-            const next = new Set(prev);
-            next.delete(fieldId);
-            return next;
-          });
-          setFieldErrors(prev => {
-            const next = { ...prev };
-            delete next[fieldId];
-            return next;
-          });
-        } catch (e: unknown) {
-          // Show error on the specific field
-          const message = e instanceof Error ? e.message : 'Failed to save. Will retry...';
-          setFieldErrors(prev => ({
-            ...prev,
-            [fieldId]: message,
-          }));
-        }
+        fieldAnswers[fieldId] = value;
+      }
+      
+      if (Object.keys(fieldAnswers).length === 0) return;
+      
+      try {
+        await saveResponsesMutation.mutateAsync({
+          form_id: formId,
+          field_answers: fieldAnswers,
+        });
+        
+        // On success, clear all saved fields from dirty set and any errors
+        setDirtyFields(new Set());
+        setFieldErrors({});
+      } catch (e: unknown) {
+        // Show a general error message
+        const message = e instanceof Error ? e.message : 'Failed to save. Will retry...';
+        console.error('Autosave failed:', message);
+        // Keep fields marked as dirty to retry on next interval
       }
     }, 30000);
     return () => clearInterval(interval);
-  }, [dirtyFields, responses, submitResponseMutation]);
+  }, [dirtyFields, responses, saveResponsesMutation, formId]);
 
   const handleSubmit = async () => {
     if (!validateAllFields()) {
@@ -280,20 +282,26 @@ export default function FormPage() {
     setIsSubmittingAll(true);
     setSubmitError(null);
 
-  try {
-      // Resend all non-empty field values to ensure backend is up to date
+    try {
+      // Collect all non-empty field values
+      const fieldAnswers: Record<string, string | null> = {};
       for (const field of currentFields) {
         const value = responses[field.id];
         // Skip empty values (prevents invalid Boolean "" etc.)
         if (value === undefined || value === null || value === '') continue;
-        await submitResponseMutation.mutateAsync({
-          field_id: field.id,
-          value,
+        fieldAnswers[field.id] = value;
+      }
+
+      // Save all responses at once using batch save
+      if (Object.keys(fieldAnswers).length > 0) {
+        await saveResponsesMutation.mutateAsync({
+          form_id: formId,
+          field_answers: fieldAnswers,
         });
       }
 
-  // Finalize submission (by form)
-  await submitSessionMutation.mutateAsync(formId);
+      // Finalize submission (by form)
+      await submitSessionMutation.mutateAsync(formId);
       setSubmitted(true);
     } catch (error) {
       console.error('Failed to submit session:', error);
@@ -307,11 +315,24 @@ export default function FormPage() {
     if (!currentFields) return;
     setIsSaving(true);
     try {
+      // Collect all non-empty field values
+      const fieldAnswers: Record<string, string | null> = {};
       for (const field of currentFields) {
         const value = responses[field.id];
         if (value === undefined || value === null || value === '') continue;
-        await submitResponseMutation.mutateAsync({ field_id: field.id, value });
+        fieldAnswers[field.id] = value;
       }
+      
+      // Save all responses at once using batch save
+      if (Object.keys(fieldAnswers).length > 0) {
+        await saveResponsesMutation.mutateAsync({
+          form_id: formId,
+          field_answers: fieldAnswers,
+        });
+      }
+      
+      // Clear dirty fields after successful save
+      setDirtyFields(new Set());
       // success UI is subtle; autosave tooltip already informs restoration
     } catch (e: unknown) {
       // surface a generic error banner via submitError for now
