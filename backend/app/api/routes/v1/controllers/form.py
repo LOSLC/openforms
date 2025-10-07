@@ -12,6 +12,7 @@ from app.api.routes.v1.dto.form import (
     FormFieldCreationDTO,
     FormFieldDTO,
     FormFieldUpdateDTO,
+    FormSaveDTO,
     FormTranslationModel,
     FormUpdateDTO,
     ResponseCreationDTO,
@@ -269,6 +270,33 @@ async def delete_form_field(
 
 
 # Form Response Operations (Public endpoints for form filling)
+@router.post(
+    "/responses/save",
+    response_model=AnswerSessionDTO,
+    status_code=status.HTTP_200_OK,
+)
+async def save_responses(
+    response: Response,
+    save_data: FormSaveDTO,
+    db_session: DBSessionDependency,
+    response_session_id: CurrentAnswerSessionDependency = None,
+):
+    """Save multiple responses at once (Public endpoint for batch saving)"""
+    answer_session = await form_provider.save_responses(
+        db_session=db_session,
+        answer_session_id=UUID(response_session_id)
+        if response_session_id
+        else None,
+        data=save_data,
+    )
+    response.set_cookie(
+        key=ANSWER_SESSION_COOKIE_KEY,
+        value=str(answer_session.id),
+        httponly=True,
+    )
+    return answer_session
+
+
 @router.post(
     "/responses",
     response_model=FieldResponseDTO,

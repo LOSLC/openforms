@@ -10,10 +10,11 @@ from app.core.db.setup import setup_db
 
 DEBUG = get_env("DEBUG", "True") == "True"
 PORT = int(get_env("PORT", "8000")) or 8000
+CORS_ORIGINS = [o.strip() for o in get_env("CORS_ORIGINS", "").split(",")]
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_: FastAPI):
     # startup
     setup_db()
     yield
@@ -35,7 +36,8 @@ app.add_middleware(
         "http://localhost:3000",
         "https://loslc.tech",
         "https://forms.loslc.tech",
-    ],  # Or ["http://localhost:3000"] for stricter control
+        *CORS_ORIGINS,
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

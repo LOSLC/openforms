@@ -111,6 +111,11 @@ export interface ResponseCreationRequest {
   value: string | null;
 }
 
+export interface FormSaveRequest {
+  form_id: string;
+  field_answers: Record<string, string | null>;
+}
+
 // Translation types
 export type SupportedLanguages = 
   | "English" 
